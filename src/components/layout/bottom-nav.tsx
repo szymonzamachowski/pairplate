@@ -1,18 +1,27 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 import {
   BookOpen,
   CalendarDays,
+  ChevronRight,
   Home,
   Plus,
   ShoppingBasket,
   User,
+  UtensilsCrossed,
 } from "lucide-react";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
-const items: Array<{
+const navItems: Array<{
   href: string;
   label: string;
   shortLabel: string;
@@ -20,68 +29,158 @@ const items: Array<{
 }> = [
   { href: "/today", label: "Dzisiaj", shortLabel: "Dziś", icon: Home },
   { href: "/plan", label: "Plan", shortLabel: "Plan", icon: CalendarDays },
-  { href: "/add", label: "Dodaj", shortLabel: "Dodaj", icon: Plus },
-  { href: "/recipes", label: "Przepisy", shortLabel: "Przep.", icon: BookOpen },
-  { href: "/shopping", label: "Zakupy", shortLabel: "Zak.", icon: ShoppingBasket },
-  { href: "/profile", label: "Profil", shortLabel: "Prof.", icon: User },
+  { href: "/shopping", label: "Zakupy", shortLabel: "Zakupy", icon: ShoppingBasket },
+  { href: "/profile", label: "Profil", shortLabel: "Profil", icon: User },
 ];
+
+const addOptions = [
+  {
+    href: "/recipes",
+    label: "Przepis",
+    description: "Wybierz zapisany przepis lub dodaj nowy",
+    icon: BookOpen,
+  },
+  {
+    href: "/add",
+    label: "Posiłek",
+    description: "Dodaj produkty i składniki ręcznie",
+    icon: UtensilsCrossed,
+  },
+] as const;
+
+function NavTab({
+  href,
+  label,
+  shortLabel,
+  icon: Icon,
+  active,
+}: {
+  href: string;
+  label: string;
+  shortLabel: string;
+  icon: typeof Home;
+  active: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      aria-label={label}
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        "flex min-w-0 flex-col items-center gap-1 px-0.5 py-2 transition-colors",
+        active
+          ? "bg-primary/10 text-primary"
+          : "text-muted-foreground hover:text-foreground"
+      )}
+    >
+      <Icon
+        className="h-[18px] w-[18px] shrink-0"
+        strokeWidth={active ? 2.25 : 1.75}
+      />
+      <span className="w-full truncate text-center text-[9px] font-semibold leading-none tracking-tight">
+        {shortLabel}
+      </span>
+    </Link>
+  );
+}
 
 export function BottomNav() {
   const pathname = usePathname();
+  const router = useRouter();
+  const [addOpen, setAddOpen] = useState(false);
+
+  const addActive =
+    pathname.startsWith("/add") || pathname.startsWith("/recipes");
+
+  function handleAddOption(href: string) {
+    setAddOpen(false);
+    router.push(href);
+  }
 
   return (
-    <nav
-      className="fixed inset-x-0 bottom-0 z-50 flex justify-center"
-      aria-label="Główne menu"
-    >
-      <div
-        className="pp-glass w-full max-w-lg overflow-hidden rounded-t-2xl border-t border-border/30 pb-[env(safe-area-inset-bottom)]"
+    <>
+      <nav
+        className="pp-glass fixed bottom-0 left-1/2 z-50 w-full max-w-lg -translate-x-1/2 border-t border-border/30 pb-[env(safe-area-inset-bottom)]"
         style={{ boxShadow: "0 -4px 20px rgba(25, 28, 29, 0.04)" }}
+        aria-label="Główne menu"
       >
-        <div className="grid grid-cols-6 gap-0 px-0.5 pb-1 pt-1.5">
-          {items.map((item) => {
-            const Icon = item.icon;
-            const active = pathname.startsWith(item.href);
+        <div className="grid grid-cols-5">
+          <NavTab
+            {...navItems[0]}
+            active={pathname.startsWith(navItems[0].href)}
+          />
+          <NavTab
+            {...navItems[1]}
+            active={pathname.startsWith(navItems[1].href)}
+          />
 
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                aria-label={item.label}
-                aria-current={active ? "page" : undefined}
-                title={item.label}
-                className={cn(
-                  "flex min-w-0 flex-col items-center gap-0.5 rounded-lg px-0 py-1 transition-colors",
-                  active
-                    ? "text-primary"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <span
-                  className={cn(
-                    "flex h-7 w-7 items-center justify-center rounded-lg",
-                    active && "bg-primary/15 ring-1 ring-primary/40"
-                  )}
-                >
-                  <Icon
-                    className="h-4 w-4 shrink-0"
-                    strokeWidth={active ? 2.25 : 1.75}
-                  />
-                </span>
-                <span
-                  className={cn(
-                    "h-2.5 max-w-full truncate text-[8px] font-semibold uppercase leading-none tracking-wide",
-                    active ? "text-primary" : "invisible"
-                  )}
-                  aria-hidden={!active}
-                >
-                  {item.shortLabel}
-                </span>
-              </Link>
-            );
-          })}
+          <button
+            type="button"
+            aria-label="Dodaj posiłek"
+            aria-expanded={addOpen}
+            aria-haspopup="dialog"
+            onClick={() => setAddOpen(true)}
+            className={cn(
+              "flex min-w-0 flex-col items-center gap-1 px-0.5 py-2 transition-colors",
+              addActive
+                ? "bg-primary/10 text-primary"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Plus
+              className="h-[18px] w-[18px] shrink-0"
+              strokeWidth={addActive ? 2.25 : 1.75}
+            />
+            <span className="w-full truncate text-center text-[9px] font-semibold leading-none tracking-tight">
+              Dodaj
+            </span>
+          </button>
+
+          <NavTab
+            {...navItems[2]}
+            active={pathname.startsWith(navItems[2].href)}
+          />
+          <NavTab
+            {...navItems[3]}
+            active={pathname.startsWith(navItems[3].href)}
+          />
         </div>
-      </div>
-    </nav>
+      </nav>
+
+      <Sheet open={addOpen} onOpenChange={setAddOpen}>
+        <SheetContent
+          side="bottom"
+          className="max-h-[85dvh] rounded-t-3xl px-4 pb-8"
+        >
+          <SheetHeader className="text-left">
+            <SheetTitle>Co dodajesz?</SheetTitle>
+          </SheetHeader>
+          <div className="mt-4 space-y-2">
+            {addOptions.map((option) => {
+              const Icon = option.icon;
+              return (
+                <button
+                  key={option.href}
+                  type="button"
+                  onClick={() => handleAddOption(option.href)}
+                  className="pp-card flex w-full items-center gap-4 p-4 text-left transition hover:-translate-y-0.5"
+                >
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                    <Icon className="h-5 w-5" strokeWidth={1.75} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold">{option.label}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {option.description}
+                    </p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                </button>
+              );
+            })}
+          </div>
+        </SheetContent>
+      </Sheet>
+    </>
   );
 }
