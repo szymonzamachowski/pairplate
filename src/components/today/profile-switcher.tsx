@@ -1,6 +1,6 @@
 "use client";
 
-import { profileTheme } from "@/lib/design-system";
+import { getProfileThemeByGender } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
 import type { Profile } from "@/types/database";
 
@@ -10,8 +10,8 @@ interface ProfileSwitcherProps {
   onChange: (profileId: string) => void;
 }
 
-function getProfileStyle(profile: Profile, index: number, active: boolean) {
-  const theme = index === 0 ? profileTheme.profile1 : profileTheme.profile2;
+function getProfileStyle(profile: Profile, active: boolean) {
+  const theme = getProfileThemeByGender(profile.gender);
   const color = profile.accent_color || theme.main;
 
   if (!active) {
@@ -32,9 +32,9 @@ export function ProfileSwitcher({
 }: ProfileSwitcherProps) {
   return (
     <div className="flex gap-2 rounded-2xl bg-muted/70 p-1.5">
-      {profiles.map((profile, index) => {
+      {profiles.map((profile) => {
         const active = profile.id === activeProfileId;
-        const style = getProfileStyle(profile, index, active);
+        const style = getProfileStyle(profile, active);
 
         return (
           <button

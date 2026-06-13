@@ -1,5 +1,7 @@
 /** PairPlate design tokens */
 
+import type { Gender } from "@/types/database";
+
 export const brand = {
   primary: "#47645b",
   primaryContainer: "#d1f2e6",
@@ -34,6 +36,10 @@ export const profileTheme = {
     glow: "rgba(128, 90, 213, 0.14)",
   },
 } as const;
+
+export function getProfileThemeByGender(gender: Gender) {
+  return gender === "female" ? profileTheme.profile2 : profileTheme.profile1;
+}
 
 export const shadows = {
   card: "0 4px 20px rgba(25, 28, 29, 0.04)",

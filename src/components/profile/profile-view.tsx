@@ -260,7 +260,9 @@ export function ProfileView({
                 }
               >
                 <SelectTrigger className="rounded-2xl">
-                  <SelectValue />
+                  <SelectValue placeholder="Wybierz płeć">
+                    {GENDER_LABELS[form.gender]}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(GENDER_LABELS).map(([k, v]) => (
@@ -320,7 +322,9 @@ export function ProfileView({
               }
             >
               <SelectTrigger className="rounded-2xl">
-                <SelectValue />
+                <SelectValue placeholder="Wybierz aktywność">
+                  {ACTIVITY_LABELS[form.activity_level]}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {Object.entries(ACTIVITY_LABELS).map(([k, v]) => (

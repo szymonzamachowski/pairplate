@@ -28,7 +28,7 @@ export function StitchHeader({
   showSwap = true,
   className,
 }: StitchHeaderProps) {
-  const { activeProfile, partnerProfile, profiles, setActiveProfileId } = useActiveProfile();
+  const { activeProfile, partnerProfile, setActiveProfileId } = useActiveProfile();
 
   function handleSwap() {
     if (onSwap) {
@@ -75,7 +75,6 @@ export function StitchHeader({
             {!backHref && activeProfile && (
               <ProfileAvatar
                 profile={activeProfile}
-                profiles={profiles}
                 size="md"
               />
             )}

@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { calculateDailyTargets } from "@/lib/nutrition/calculator";
-import { PROFILE_COLORS } from "@/lib/constants";
+import { GENDER_ACCENT_COLORS } from "@/lib/constants";
 import type { ActivityLevel, Gender, Goal, GoalPace } from "@/types/database";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -86,7 +86,7 @@ export async function createProfiles(profileA: ProfileInput, profileB: ProfileIn
       daily_protein_g: targets.protein_g,
       daily_fat_g: targets.fat_g,
       daily_carbs_g: targets.carbs_g,
-      accent_color: PROFILE_COLORS[index],
+      accent_color: GENDER_ACCENT_COLORS[profile.gender],
       sort_order: index,
     };
   });
@@ -117,6 +117,7 @@ export async function updateProfile(profileId: string, input: ProfileInput) {
       daily_protein_g: targets.protein_g,
       daily_fat_g: targets.fat_g,
       daily_carbs_g: targets.carbs_g,
+      accent_color: GENDER_ACCENT_COLORS[input.gender],
     })
     .eq("id", profileId);
 

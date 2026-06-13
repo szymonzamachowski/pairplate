@@ -13,7 +13,8 @@ import {
 } from "@/components/ui/select";
 import { GoalPaceSelector, GoalTabs } from "@/components/profile/goal-pace-selector";
 import { ACTIVITY_LABELS, GENDER_LABELS } from "@/lib/constants";
-import { profileTheme } from "@/lib/design-system";
+import { ProfileAvatar } from "@/components/profile/profile-avatar";
+import { getProfileThemeByGender } from "@/lib/design-system";
 import { createProfiles, type ProfileInput } from "@/lib/actions/auth";
 import type { GoalPace } from "@/types/database";
 import { useState, useTransition } from "react";
@@ -32,20 +33,30 @@ const defaultProfile = (): ProfileInput => ({
 
 function ProfileForm({
   title,
-  accent,
   value,
   onChange,
 }: {
   title: string;
-  accent: string;
   value: ProfileInput;
   onChange: (value: ProfileInput) => void;
 }) {
+  const theme = getProfileThemeByGender(value.gender);
+
   return (
-    <div className="pp-card p-5" style={{ boxShadow: `0 4px 20px ${accent}12` }}>
-      <h3 className="mb-4 text-base font-medium" style={{ color: accent }}>
-        {title}
-      </h3>
+    <div
+      className="pp-card p-5"
+      style={{
+        backgroundColor: theme.container,
+        boxShadow: `0 4px 20px ${theme.glow}`,
+        border: `1px solid ${theme.main}22`,
+      }}
+    >
+      <div className="mb-4 flex items-center gap-4">
+        <ProfileAvatar gender={value.gender} size="lg" />
+        <h3 className="text-base font-medium" style={{ color: theme.main }}>
+          {title}
+        </h3>
+      </div>
       <div className="space-y-4">
         <div>
           <Label>Imię</Label>
@@ -66,7 +77,9 @@ function ProfileForm({
               }
             >
               <SelectTrigger className="pp-input mt-1.5">
-                <SelectValue />
+                <SelectValue placeholder="Wybierz płeć">
+                  {GENDER_LABELS[value.gender]}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {Object.entries(GENDER_LABELS).map(([k, label]) => (
@@ -142,7 +155,9 @@ function ProfileForm({
             }
           >
             <SelectTrigger className="pp-input mt-1.5">
-              <SelectValue />
+              <SelectValue placeholder="Wybierz aktywność">
+                {ACTIVITY_LABELS[value.activity_level]}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {Object.entries(ACTIVITY_LABELS).map(([k, label]) => (
@@ -195,13 +210,11 @@ export function OnboardingForm() {
 
       <ProfileForm
         title="Profil 1"
-        accent={profileTheme.profile1.main}
         value={profileA}
         onChange={setProfileA}
       />
       <ProfileForm
         title="Profil 2"
-        accent={profileTheme.profile2.main}
         value={profileB}
         onChange={setProfileB}
       />

@@ -2,14 +2,14 @@
 
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { ProfileAvatar } from "@/components/profile/profile-avatar";
-import { profileTheme } from "@/lib/design-system";
+import { getProfileThemeByGender } from "@/lib/design-system";
 import { ACTIVE_PROFILE_KEY } from "@/lib/constants";
 import type { Profile } from "@/types/database";
 import { useRouter } from "next/navigation";
 
 const profileMeta = [
-  { tagline: "Kuchenny mistrz", theme: profileTheme.profile1 },
-  { tagline: "Esteta smaku", theme: profileTheme.profile2 },
+  { tagline: "Kuchenny mistrz" },
+  { tagline: "Esteta smaku" },
 ] as const;
 
 export function SelectProfileView({ profiles }: { profiles: Profile[] }) {
@@ -33,20 +33,24 @@ export function SelectProfileView({ profiles }: { profiles: Profile[] }) {
       <div className="grid w-full max-w-sm gap-6">
         {profiles.map((profile, index) => {
           const meta = profileMeta[index] ?? profileMeta[0];
-          const color = profile.accent_color || meta.theme.main;
+          const theme = getProfileThemeByGender(profile.gender);
+          const color = profile.accent_color || theme.main;
 
           return (
             <button
               key={profile.id}
               type="button"
               onClick={() => choose(profile.id)}
-              className="group relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-border/40 bg-card transition-all hover:-translate-y-1 active:scale-[0.98]"
-              style={{ boxShadow: "0 20px 40px rgba(25, 28, 29, 0.04)" }}
+              className="group relative aspect-[4/3] w-full overflow-hidden rounded-2xl border transition-all hover:-translate-y-1 active:scale-[0.98]"
+              style={{
+                backgroundColor: theme.container,
+                borderColor: `${theme.main}33`,
+                boxShadow: `0 20px 40px ${theme.glow}`,
+              }}
             >
               <div className="flex h-full flex-col items-center justify-center p-8">
                 <ProfileAvatar
                   profile={profile}
-                  profiles={profiles}
                   size="xl"
                   className="mb-4 ring-4 ring-background/80"
                   priority={index === 0}

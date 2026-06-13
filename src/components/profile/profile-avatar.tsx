@@ -1,12 +1,12 @@
 "use client";
 
+import { getProfileThemeByGender } from "@/lib/design-system";
 import {
   getProfileAvatarMeta,
-  PROFILE_AVATARS,
-  type ProfileSlot,
+  resolveProfileGender,
 } from "@/lib/profile-avatar";
 import { cn } from "@/lib/utils";
-import type { Profile } from "@/types/database";
+import type { Gender, Profile } from "@/types/database";
 import Image from "next/image";
 
 const sizeClasses = {
@@ -18,8 +18,7 @@ const sizeClasses = {
 
 interface ProfileAvatarProps {
   profile?: Profile | null;
-  slot?: ProfileSlot;
-  profiles?: Profile[];
+  gender?: Gender;
   size?: keyof typeof sizeClasses;
   className?: string;
   showBorder?: boolean;
@@ -28,32 +27,28 @@ interface ProfileAvatarProps {
 
 export function ProfileAvatar({
   profile,
-  slot,
-  profiles,
+  gender,
   size = "md",
   className,
   showBorder = true,
   priority = false,
 }: ProfileAvatarProps) {
-  const meta = slot
-    ? PROFILE_AVATARS[slot]
-    : profile
-      ? getProfileAvatarMeta(profile, profiles)
-      : PROFILE_AVATARS.profile1;
-
-  const borderColor = profile?.accent_color
-    ? `${profile.accent_color}33`
-    : "var(--border)";
+  const resolvedGender = resolveProfileGender(profile, gender);
+  const meta = getProfileAvatarMeta(resolvedGender);
+  const theme = getProfileThemeByGender(resolvedGender);
 
   return (
     <div
       className={cn(
-        "relative shrink-0 overflow-hidden rounded-full bg-muted",
+        "relative shrink-0 overflow-hidden rounded-full",
         showBorder && "border-2",
         sizeClasses[size],
         className
       )}
-      style={showBorder ? { borderColor } : undefined}
+      style={{
+        backgroundColor: theme.container,
+        ...(showBorder ? { borderColor: `${theme.main}44` } : undefined),
+      }}
     >
       <Image
         src={meta.src}

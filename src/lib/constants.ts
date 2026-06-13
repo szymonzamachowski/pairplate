@@ -9,6 +9,14 @@ import type {
 export const APP_NAME = "PairPlate";
 export const ACTIVE_PROFILE_KEY = "pairplate_active_profile_id";
 
+export const GENDER_ACCENT_COLORS: Record<Gender, string> = {
+  male: "#1A365D",
+  female: "#805AD5",
+};
+
+/** @deprecated Use GENDER_ACCENT_COLORS[gender] */
+export const PROFILE_COLORS = [GENDER_ACCENT_COLORS.male, GENDER_ACCENT_COLORS.female] as const;
+
 export const MEAL_TYPE_LABELS: Record<MealType, string> = {
   breakfast: "Śniadanie",
   second_breakfast: "Drugie śniadanie",
@@ -51,8 +59,6 @@ export const CATEGORY_LABELS: Record<ProductCategory, string> = {
   produce: "Warzywa i owoce",
   other: "Inne",
 };
-
-export const PROFILE_COLORS = ["#1A365D", "#805AD5"] as const;
 
 export const WEEKDAY_LABELS = [
   "Nd",
