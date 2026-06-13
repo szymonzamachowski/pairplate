@@ -43,3 +43,7 @@ next-env.d.ts
 
 # local design assets (not for repo)
 /UI+logos/
+
+# local AI assistant instructions
+/AGENTS.md
+/CLAUDE.md
