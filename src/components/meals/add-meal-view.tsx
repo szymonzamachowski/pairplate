@@ -827,7 +827,7 @@ export function AddMealView({
       </StitchPage>
 
       <footer
-        className="pp-glass fixed inset-x-0 bottom-[72px] z-40 rounded-t-3xl border-t border-border/30 px-5 pt-4 pb-4"
+        className="pp-glass fixed inset-x-0 bottom-[88px] z-40 rounded-t-3xl border-t border-border/30 px-5 pt-4 pb-4"
         style={{ boxShadow: "0 -10px 30px rgba(25, 28, 29, 0.03)" }}
       >
         <div className="mx-auto max-w-lg space-y-3">

@@ -67,17 +67,17 @@ function NavTab({
       aria-label={label}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "flex min-w-0 flex-col items-center gap-1 px-0.5 py-2 transition-colors",
+        "flex min-w-0 flex-col items-center gap-1.5 px-0.5 py-2.5 transition-colors",
         active
           ? "bg-primary/10 text-primary"
           : "text-muted-foreground hover:text-foreground"
       )}
     >
       <Icon
-        className="h-[18px] w-[18px] shrink-0"
+        className="h-5 w-5 shrink-0"
         strokeWidth={active ? 2.25 : 1.75}
       />
-      <span className="w-full truncate text-center text-[9px] font-semibold leading-none tracking-tight">
+      <span className="w-full truncate text-center text-[10px] font-semibold leading-none tracking-tight">
         {shortLabel}
       </span>
     </Link>
@@ -99,53 +99,55 @@ export function BottomNav() {
 
   return (
     <>
-      <nav
-        className="pp-glass fixed bottom-0 left-1/2 z-50 w-full max-w-lg -translate-x-1/2 border-t border-border/30 pb-[env(safe-area-inset-bottom)]"
-        style={{ boxShadow: "0 -4px 20px rgba(25, 28, 29, 0.04)" }}
-        aria-label="Główne menu"
-      >
-        <div className="grid grid-cols-5">
-          <NavTab
-            {...navItems[0]}
-            active={pathname.startsWith(navItems[0].href)}
-          />
-          <NavTab
-            {...navItems[1]}
-            active={pathname.startsWith(navItems[1].href)}
-          />
-
-          <button
-            type="button"
-            aria-label="Dodaj posiłek"
-            aria-expanded={addOpen}
-            aria-haspopup="dialog"
-            onClick={() => setAddOpen(true)}
-            className={cn(
-              "flex min-w-0 flex-col items-center gap-1 px-0.5 py-2 transition-colors",
-              addActive
-                ? "bg-primary/10 text-primary"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <Plus
-              className="h-[18px] w-[18px] shrink-0"
-              strokeWidth={addActive ? 2.25 : 1.75}
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-[max(12px,env(safe-area-inset-bottom))]">
+        <nav
+          className="pp-glass pointer-events-auto w-full max-w-lg rounded-2xl border border-border/30"
+          style={{ boxShadow: "0 4px 24px rgba(25, 28, 29, 0.08)" }}
+          aria-label="Główne menu"
+        >
+          <div className="grid grid-cols-5">
+            <NavTab
+              {...navItems[0]}
+              active={pathname.startsWith(navItems[0].href)}
             />
-            <span className="w-full truncate text-center text-[9px] font-semibold leading-none tracking-tight">
-              Dodaj
-            </span>
-          </button>
+            <NavTab
+              {...navItems[1]}
+              active={pathname.startsWith(navItems[1].href)}
+            />
 
-          <NavTab
-            {...navItems[2]}
-            active={pathname.startsWith(navItems[2].href)}
-          />
-          <NavTab
-            {...navItems[3]}
-            active={pathname.startsWith(navItems[3].href)}
-          />
-        </div>
-      </nav>
+            <button
+              type="button"
+              aria-label="Dodaj posiłek"
+              aria-expanded={addOpen}
+              aria-haspopup="dialog"
+              onClick={() => setAddOpen(true)}
+              className={cn(
+                "flex min-w-0 flex-col items-center gap-1.5 px-0.5 py-2.5 transition-colors",
+                addActive
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Plus
+                className="h-5 w-5 shrink-0"
+                strokeWidth={addActive ? 2.25 : 1.75}
+              />
+              <span className="w-full truncate text-center text-[10px] font-semibold leading-none tracking-tight">
+                Dodaj
+              </span>
+            </button>
+
+            <NavTab
+              {...navItems[2]}
+              active={pathname.startsWith(navItems[2].href)}
+            />
+            <NavTab
+              {...navItems[3]}
+              active={pathname.startsWith(navItems[3].href)}
+            />
+          </div>
+        </nav>
+      </div>
 
       <Sheet open={addOpen} onOpenChange={setAddOpen}>
         <SheetContent

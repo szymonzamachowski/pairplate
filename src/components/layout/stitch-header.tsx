@@ -127,7 +127,7 @@ export function StitchPage({
   className?: string;
 }) {
   return (
-    <main className={cn("px-5 pb-28 pt-5", className)}>{children}</main>
+    <main className={cn("px-5 pb-32 pt-5", className)}>{children}</main>
   );
 }
 

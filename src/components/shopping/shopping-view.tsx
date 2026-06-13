@@ -199,7 +199,7 @@ export function ShoppingView({
 
         {showAddForm && (
           <div
-            className="fixed inset-x-0 bottom-[72px] z-40 rounded-t-3xl border-t border-border/30 bg-card/95 px-5 pt-5 pb-6 backdrop-blur-md"
+            className="fixed inset-x-0 bottom-[88px] z-40 rounded-t-3xl border-t border-border/30 bg-card/95 px-5 pt-5 pb-6 backdrop-blur-md"
             style={{ boxShadow: "0 -10px 30px rgba(25, 28, 29, 0.03)" }}
           >
             <h3 className="mb-4 text-lg font-medium">Dodaj ręcznie</h3>

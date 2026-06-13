@@ -10,7 +10,7 @@ export function AppShell({
   return (
     <div
       className={cn(
-        "pp-gradient-bg mx-auto min-h-dvh max-w-lg bg-background pb-28",
+        "pp-gradient-bg mx-auto min-h-dvh max-w-lg bg-background pb-32",
         className
       )}
     >
