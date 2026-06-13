@@ -9,6 +9,7 @@ export interface MealItemInput {
   protein_g: number;
   fat_g: number;
   carbs_g: number;
+  fiber_g: number;
 }
 
 export function buildMealItemFromProduct(
@@ -24,5 +25,6 @@ export function buildMealItemFromProduct(
     protein_g: nutrition.protein_g,
     fat_g: nutrition.fat_g,
     carbs_g: nutrition.carbs_g,
+    fiber_g: nutrition.fiber_g,
   };
 }

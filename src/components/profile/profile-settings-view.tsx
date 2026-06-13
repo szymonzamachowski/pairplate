@@ -202,7 +202,8 @@ function ProfileSettingsForm({ profile }: { profile: Profile }) {
               <p className="font-medium">Obliczone cele</p>
               <p className="text-muted-foreground">
                 {profile.daily_calories} kcal · B {profile.daily_protein_g} g · W{" "}
-                {profile.daily_carbs_g} g · T {profile.daily_fat_g} g
+                {profile.daily_carbs_g} g · T {profile.daily_fat_g} g · Bl{" "}
+                {profile.daily_fiber_g} g · W {profile.daily_water_ml} ml
               </p>
               <p className="mt-2 text-xs text-muted-foreground">
                 Zapisz ustawienia po zmianie danych lub tempa celu.

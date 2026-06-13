@@ -50,6 +50,8 @@ export interface Profile {
   daily_protein_g: number;
   daily_fat_g: number;
   daily_carbs_g: number;
+  daily_fiber_g: number;
+  daily_water_ml: number;
   accent_color: string;
   sort_order: number;
   created_at: string;
@@ -68,6 +70,7 @@ export interface Product {
   protein_per_100g: number;
   fat_per_100g: number;
   carbs_per_100g: number;
+  fiber_per_100g: number;
   created_at: string;
   updated_at: string;
 }
@@ -82,6 +85,7 @@ export interface MealItem {
   protein_g: number;
   fat_g: number;
   carbs_g: number;
+  fiber_g: number;
   sort_order: number;
 }
 
@@ -98,6 +102,7 @@ export interface MealEntry {
   total_protein_g: number;
   total_fat_g: number;
   total_carbs_g: number;
+  total_fiber_g: number;
   created_at: string;
   meal_items?: MealItem[];
 }
@@ -117,6 +122,7 @@ export interface SharedMeal {
   total_protein_g: number;
   total_fat_g: number;
   total_carbs_g: number;
+  total_fiber_g: number;
   created_at: string;
 }
 
@@ -128,6 +134,16 @@ export interface DailyLog {
   total_protein_g: number;
   total_fat_g: number;
   total_carbs_g: number;
+  total_fiber_g: number;
+  total_water_ml: number;
+}
+
+export interface WaterLog {
+  id: string;
+  profile_id: string;
+  log_date: string;
+  amount_ml: number;
+  created_at: string;
 }
 
 export interface WeightLog {
@@ -202,6 +218,7 @@ export interface NutritionTotals {
   protein_g: number;
   fat_g: number;
   carbs_g: number;
+  fiber_g: number;
 }
 
 export interface DraftMealItem {

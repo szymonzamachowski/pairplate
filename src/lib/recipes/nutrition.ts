@@ -63,11 +63,12 @@ function fallbackProduct(item: SavedRecipeItem): Product {
     protein_per_100g: 0,
     fat_per_100g: 0,
     carbs_per_100g: 0,
+    fiber_per_100g: 0,
     created_at: "",
     updated_at: "",
   };
 }
 
 export function formatMacroSummary(nutrition: NutritionTotals): string {
-  return `${Math.round(nutrition.kcal)} kcal · B ${Math.round(nutrition.protein_g)} · W ${Math.round(nutrition.carbs_g)} · T ${Math.round(nutrition.fat_g)}`;
+  return `${Math.round(nutrition.kcal)} kcal · B ${Math.round(nutrition.protein_g)} · W ${Math.round(nutrition.carbs_g)} · T ${Math.round(nutrition.fat_g)} · Bl ${Math.round(nutrition.fiber_g)}`;
 }

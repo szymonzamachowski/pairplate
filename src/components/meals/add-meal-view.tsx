@@ -101,6 +101,7 @@ export function AddMealView({
     protein: "",
     fat: "",
     carbs: "",
+    fiber: "",
     brand: "",
     barcode: "",
   });
@@ -232,6 +233,7 @@ export function AddMealView({
         protein_g: nutrition.protein_g,
         fat_g: nutrition.fat_g,
         carbs_g: nutrition.carbs_g,
+        fiber_g: nutrition.fiber_g,
       };
     });
 
@@ -289,6 +291,7 @@ export function AddMealView({
       protein_per_100g: Number(customProduct.protein),
       fat_per_100g: Number(customProduct.fat),
       carbs_per_100g: Number(customProduct.carbs),
+      fiber_per_100g: Number(customProduct.fiber) || 0,
       brand: customProduct.brand || undefined,
       barcode: customProduct.barcode || undefined,
     });
@@ -302,6 +305,7 @@ export function AddMealView({
         protein: "",
         fat: "",
         carbs: "",
+        fiber: "",
         brand: "",
         barcode: "",
       });
@@ -469,7 +473,7 @@ export function AddMealView({
                 className="rounded-xl"
               />
               <div className="grid grid-cols-2 gap-2">
-                {(["kcal", "protein", "fat", "carbs"] as const).map((field) => (
+                {(["kcal", "protein", "fat", "carbs", "fiber"] as const).map((field) => (
                   <Input
                     key={field}
                     placeholder={
@@ -479,7 +483,9 @@ export function AddMealView({
                           ? "Białko"
                           : field === "fat"
                             ? "Tłuszcz"
-                            : "Węgle"
+                            : field === "fiber"
+                              ? "Błonnik"
+                              : "Węgle"
                     }
                     value={customProduct[field]}
                     onChange={(e) =>
@@ -625,12 +631,17 @@ export function AddMealView({
 
           <StitchMacroSummaryBar
             protein={draftTotals.protein_g}
-            proteinTarget={draftTotals.protein_g}
+            proteinTarget={Number(activeProfile?.daily_protein_g ?? draftTotals.protein_g)}
             carbs={draftTotals.carbs_g}
-            carbsTarget={draftTotals.carbs_g}
+            carbsTarget={Number(activeProfile?.daily_carbs_g ?? draftTotals.carbs_g)}
             fat={draftTotals.fat_g}
-            fatTarget={draftTotals.fat_g}
+            fatTarget={Number(activeProfile?.daily_fat_g ?? draftTotals.fat_g)}
           />
+          {draftTotals.fiber_g > 0 && (
+            <p className="mt-3 text-center text-sm text-muted-foreground">
+              Błonnik w posiłku: {Math.round(draftTotals.fiber_g * 10) / 10} g
+            </p>
+          )}
 
           <Button
             className="mt-6 h-14 w-full rounded-2xl text-base"
@@ -990,7 +1001,7 @@ function SplitPortionCard({
 function StitchMacroPillsInline({
   totals,
 }: {
-  totals: { protein_g: number; carbs_g: number; fat_g: number };
+  totals: { protein_g: number; carbs_g: number; fat_g: number; fiber_g: number };
 }) {
   const items = [
     { label: "Białko", value: totals.protein_g, color: "#47645b" },
@@ -999,21 +1010,28 @@ function StitchMacroPillsInline({
   ];
 
   return (
-    <div className="mt-4 grid grid-cols-3 gap-3 border-t border-border/40 pt-4">
-      {items.map((item) => (
-        <div key={item.label} className="text-center">
-          <span className="pp-label-caps text-[10px] text-muted-foreground">
-            {item.label}
-          </span>
-          <div className="mt-1 flex items-center justify-center gap-1">
-            <span
-              className="h-2 w-2 rounded-full"
-              style={{ backgroundColor: item.color }}
-            />
-            <span className="font-medium">{Math.round(item.value)}g</span>
+    <>
+      <div className="mt-4 grid grid-cols-3 gap-3 border-t border-border/40 pt-4">
+        {items.map((item) => (
+          <div key={item.label} className="text-center">
+            <span className="pp-label-caps text-[10px] text-muted-foreground">
+              {item.label}
+            </span>
+            <div className="mt-1 flex items-center justify-center gap-1">
+              <span
+                className="h-2 w-2 rounded-full"
+                style={{ backgroundColor: item.color }}
+              />
+              <span className="font-medium">{Math.round(item.value)}g</span>
+            </div>
           </div>
-        </div>
-      ))}
-    </div>
+        ))}
+      </div>
+      {totals.fiber_g > 0 && (
+        <p className="mt-3 text-center text-sm text-muted-foreground">
+          Błonnik w posiłku: {Math.round(totals.fiber_g * 10) / 10} g
+        </p>
+      )}
+    </>
   );
 }

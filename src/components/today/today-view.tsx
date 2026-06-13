@@ -2,14 +2,16 @@
 
 import { CalorieRing } from "@/components/today/calorie-ring";
 import { MealSection } from "@/components/today/meal-section";
+import { WaterAddSheet } from "@/components/today/water-add-sheet";
 import { StitchHeader, StitchPage } from "@/components/layout/stitch-header";
-import { StitchMacroPills } from "@/components/layout/stitch-macro";
+import { StitchDailyNutrients, StitchMacroPills } from "@/components/layout/stitch-macro";
 import { useActiveProfile } from "@/components/providers/active-profile-provider";
 import { MEAL_TYPES } from "@/lib/constants";
 import type { DailyLog, MealEntry, Profile } from "@/types/database";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
 interface TodayViewProps {
   initialDataByProfile: Record<
@@ -17,14 +19,18 @@ interface TodayViewProps {
     {
       meals: MealEntry[];
       dailyLog: DailyLog | null;
+      waterMl: number;
     }
   >;
 }
 
 export function TodayView({ initialDataByProfile }: TodayViewProps) {
+  const router = useRouter();
   const { activeProfile, isReady } = useActiveProfile();
   const profile = activeProfile as Profile | undefined;
   const data = profile ? initialDataByProfile[profile.id] : null;
+  const logDate = format(new Date(), "yyyy-MM-dd");
+  const [waterSheetOpen, setWaterSheetOpen] = useState(false);
 
   const mealsByType = useMemo(() => {
     const grouped: Record<string, MealEntry[]> = {};
@@ -47,6 +53,10 @@ export function TodayView({ initialDataByProfile }: TodayViewProps) {
   const protein = Number(data?.dailyLog?.total_protein_g ?? 0);
   const fat = Number(data?.dailyLog?.total_fat_g ?? 0);
   const carbs = Number(data?.dailyLog?.total_carbs_g ?? 0);
+  const fiber = Number(data?.dailyLog?.total_fiber_g ?? 0);
+  const displayWaterMl = Number(
+    data?.waterMl ?? data?.dailyLog?.total_water_ml ?? 0
+  );
   const remaining = Math.max(0, profile.daily_calories - consumed);
 
   return (
@@ -81,6 +91,13 @@ export function TodayView({ initialDataByProfile }: TodayViewProps) {
             fat={fat}
             fatTarget={Number(profile.daily_fat_g)}
           />
+          <StitchDailyNutrients
+            fiber={fiber}
+            fiberTarget={Number(profile.daily_fiber_g)}
+            water={displayWaterMl}
+            waterTarget={Number(profile.daily_water_ml)}
+            onAddWater={() => setWaterSheetOpen(true)}
+          />
         </section>
 
         <section className="space-y-6">
@@ -90,11 +107,21 @@ export function TodayView({ initialDataByProfile }: TodayViewProps) {
               mealType={mealType}
               entries={mealsByType[mealType] ?? []}
               profileId={profile.id}
-              logDate={format(new Date(), "yyyy-MM-dd")}
+              logDate={logDate}
             />
           ))}
         </section>
       </StitchPage>
+
+      <WaterAddSheet
+        open={waterSheetOpen}
+        onOpenChange={setWaterSheetOpen}
+        profileId={profile.id}
+        logDate={logDate}
+        onAdded={() => {
+          router.refresh();
+        }}
+      />
     </>
   );
 }

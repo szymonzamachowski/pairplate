@@ -112,6 +112,7 @@ export async function movePlannedMealToDiary(plannedMealId: string, profileId: s
       protein_g: 0,
       fat_g: 0,
       carbs_g: 0,
+      fiber_g: 0,
     });
   }
 

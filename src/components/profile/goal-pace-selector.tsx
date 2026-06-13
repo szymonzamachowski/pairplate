@@ -123,7 +123,8 @@ export function GoalPaceSelector({
           </li>
           <li>
             Białko: {preview.protein_g} g · Tłuszcz: {preview.fat_g} g · Węgle:{" "}
-            {preview.carbs_g} g
+            {preview.carbs_g} g · Błonnik: {preview.fiber_g} g · Woda:{" "}
+            {preview.daily_water_ml} ml
           </li>
         </ul>
         {preview.warnings.length > 0 && (

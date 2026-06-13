@@ -34,6 +34,7 @@ export interface ProfileNutritionInput {
 
 export interface CalculatedTargets extends NutritionTotals {
   daily_calories: number;
+  daily_water_ml: number;
   bmr: number;
   tdee: number;
   calorie_adjustment: number;
@@ -52,6 +53,37 @@ export function calculateBmr(input: ProfileNutritionInput): number {
 export function calculateTdee(input: ProfileNutritionInput): number {
   const bmr = calculateBmr(input);
   return bmr * ACTIVITY_MULTIPLIERS[input.activity_level];
+}
+
+/** EFSA: min. 25 g (K) / 30 g (M); dodatkowo ~14 g na 1000 kcal (wytyczne żywieniowe). */
+export function calculateDailyFiber(
+  gender: Gender,
+  daily_calories: number
+): number {
+  const genderMin = gender === "male" ? 30 : 25;
+  const calorieBased = Math.round((daily_calories / 1000) * 14);
+  return Math.max(genderMin, calorieBased);
+}
+
+const WATER_ACTIVITY_BONUS_ML: Record<ActivityLevel, number> = {
+  sedentary: 0,
+  light: 250,
+  moderate: 500,
+  active: 750,
+  very_active: 1000,
+};
+
+/** EFSA AI 2.0 L (K) / 2.5 L (M) + 33 ml/kg masy ciała + bonus aktywności. */
+export function calculateDailyWaterMl(
+  input: Pick<ProfileNutritionInput, "gender" | "current_weight_kg" | "activity_level">
+): number {
+  const genderMin = input.gender === "male" ? 2500 : 2000;
+  const weightBased = Math.round(input.current_weight_kg * 33);
+  const raw =
+    Math.max(weightBased, genderMin) +
+    WATER_ACTIVITY_BONUS_ML[input.activity_level];
+
+  return Math.round(raw / 100) * 100;
 }
 
 export function calculateDailyTargets(
@@ -136,15 +168,19 @@ export function calculateDailyTargets(
     daily_calories - proteinCalories - fatCalories
   );
   const carbs_g = Math.round((carbsCalories / 4) * 10) / 10;
+  const fiber_g = calculateDailyFiber(input.gender, daily_calories);
+  const daily_water_ml = calculateDailyWaterMl(input);
 
   return {
     bmr: Math.round(bmr),
     tdee: Math.round(tdee),
     daily_calories,
+    daily_water_ml,
     kcal: daily_calories,
     protein_g,
     fat_g,
     carbs_g,
+    fiber_g,
     calorie_adjustment,
     requested_kg_per_week: requestedKg,
     effective_kg_per_week: effectiveKg,
@@ -155,7 +191,11 @@ export function calculateDailyTargets(
 export function calculateProductNutrition(
   product: Pick<
     Product,
-    "kcal_per_100g" | "protein_per_100g" | "fat_per_100g" | "carbs_per_100g"
+    | "kcal_per_100g"
+    | "protein_per_100g"
+    | "fat_per_100g"
+    | "carbs_per_100g"
+    | "fiber_per_100g"
   >,
   grams: number
 ): NutritionTotals {
@@ -165,6 +205,7 @@ export function calculateProductNutrition(
     protein_g: round(product.protein_per_100g * ratio),
     fat_g: round(product.fat_per_100g * ratio),
     carbs_g: round(product.carbs_per_100g * ratio),
+    fiber_g: round(product.fiber_per_100g * ratio),
   };
 }
 
@@ -175,8 +216,9 @@ export function sumNutrition(items: NutritionTotals[]): NutritionTotals {
       protein_g: round(acc.protein_g + item.protein_g),
       fat_g: round(acc.fat_g + item.fat_g),
       carbs_g: round(acc.carbs_g + item.carbs_g),
+      fiber_g: round(acc.fiber_g + item.fiber_g),
     }),
-    { kcal: 0, protein_g: 0, fat_g: 0, carbs_g: 0 }
+    { kcal: 0, protein_g: 0, fat_g: 0, carbs_g: 0, fiber_g: 0 }
   );
 }
 
@@ -186,7 +228,7 @@ export function splitNutritionByRatio(
   totalWeightGrams: number
 ): NutritionTotals {
   if (totalWeightGrams <= 0) {
-    return { kcal: 0, protein_g: 0, fat_g: 0, carbs_g: 0 };
+    return { kcal: 0, protein_g: 0, fat_g: 0, carbs_g: 0, fiber_g: 0 };
   }
 
   const ratio = portionGrams / totalWeightGrams;
@@ -195,6 +237,7 @@ export function splitNutritionByRatio(
     protein_g: round(totals.protein_g * ratio),
     fat_g: round(totals.fat_g * ratio),
     carbs_g: round(totals.carbs_g * ratio),
+    fiber_g: round(totals.fiber_g * ratio),
   };
 }
 

@@ -36,6 +36,7 @@ export async function cacheOffProduct(
     protein_per_100g: mapped.protein_per_100g,
     fat_per_100g: mapped.fat_per_100g,
     carbs_per_100g: mapped.carbs_per_100g,
+    fiber_per_100g: mapped.fiber_per_100g,
   };
 
   try {
@@ -103,6 +104,7 @@ export function offPreviewToProduct(
     protein_per_100g: mapped.protein_per_100g,
     fat_per_100g: mapped.fat_per_100g,
     carbs_per_100g: mapped.carbs_per_100g,
+    fiber_per_100g: mapped.fiber_per_100g,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   };

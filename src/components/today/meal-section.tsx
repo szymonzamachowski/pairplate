@@ -75,7 +75,8 @@ export function MealSection({
                     <p className="mt-1 text-sm text-muted-foreground">
                       {Math.round(Number(entry.total_kcal))} kcal · B{" "}
                       {Math.round(Number(entry.total_protein_g))} · W{" "}
-                      {Math.round(Number(entry.total_carbs_g))}
+                      {Math.round(Number(entry.total_carbs_g))} · Bl{" "}
+                      {Math.round(Number(entry.total_fiber_g ?? 0))}
                     </p>
                     {entry.is_shared && (
                       <span className="mt-1 inline-flex items-center gap-1 text-xs text-secondary">

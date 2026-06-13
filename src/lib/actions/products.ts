@@ -127,6 +127,7 @@ export async function createCustomProduct(input: {
   protein_per_100g: number;
   fat_per_100g: number;
   carbs_per_100g: number;
+  fiber_per_100g: number;
   brand?: string;
   barcode?: string;
   category?: import("@/types/database").ProductCategory;
@@ -149,6 +150,7 @@ export async function createCustomProduct(input: {
       protein_per_100g: input.protein_per_100g,
       fat_per_100g: input.fat_per_100g,
       carbs_per_100g: input.carbs_per_100g,
+      fiber_per_100g: input.fiber_per_100g ?? 0,
     })
     .select("*")
     .single();

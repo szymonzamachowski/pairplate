@@ -10,6 +10,7 @@ export interface OffNutriments {
   proteins_100g?: number;
   fat_100g?: number;
   carbohydrates_100g?: number;
+  fiber_100g?: number;
 }
 
 export interface OffProductPayload {
@@ -40,6 +41,7 @@ export interface MappedOffProduct {
   protein_per_100g: number;
   fat_per_100g: number;
   carbs_per_100g: number;
+  fiber_per_100g: number;
 }
 
 function offHeaders(): HeadersInit {
@@ -81,6 +83,7 @@ export function mapOffProduct(payload: OffProductPayload): MappedOffProduct | nu
     protein_per_100g: round2(n.proteins_100g ?? 0),
     fat_per_100g: round2(n.fat_100g ?? 0),
     carbs_per_100g: round2(n.carbohydrates_100g ?? 0),
+    fiber_per_100g: round2(n.fiber_100g ?? 0),
   };
 }
 

@@ -18,7 +18,7 @@ async function upsertDailyLog(
 ) {
   const { data: entries } = await supabase
     .from("meal_entries")
-    .select("total_kcal, total_protein_g, total_fat_g, total_carbs_g")
+    .select("total_kcal, total_protein_g, total_fat_g, total_carbs_g, total_fiber_g")
     .eq("profile_id", profileId)
     .eq("log_date", logDate);
 
@@ -28,6 +28,7 @@ async function upsertDailyLog(
       protein_g: Number(e.total_protein_g),
       fat_g: Number(e.total_fat_g),
       carbs_g: Number(e.total_carbs_g),
+      fiber_g: Number(e.total_fiber_g ?? 0),
     }))
   );
 
@@ -39,6 +40,7 @@ async function upsertDailyLog(
       total_protein_g: totals.protein_g,
       total_fat_g: totals.fat_g,
       total_carbs_g: totals.carbs_g,
+      total_fiber_g: totals.fiber_g,
     },
     { onConflict: "profile_id,log_date" }
   );
@@ -89,6 +91,7 @@ export async function addSoloMeal(input: {
       protein_g: i.protein_g,
       fat_g: i.fat_g,
       carbs_g: i.carbs_g,
+      fiber_g: i.fiber_g,
     }))
   );
 
@@ -105,6 +108,7 @@ export async function addSoloMeal(input: {
       total_protein_g: totals.protein_g,
       total_fat_g: totals.fat_g,
       total_carbs_g: totals.carbs_g,
+      total_fiber_g: totals.fiber_g,
     })
     .select("id")
     .single();
@@ -121,6 +125,7 @@ export async function addSoloMeal(input: {
       protein_g: item.protein_g,
       fat_g: item.fat_g,
       carbs_g: item.carbs_g,
+      fiber_g: item.fiber_g,
       sort_order: index,
     }))
   );
@@ -158,6 +163,7 @@ export async function addSharedMeal(input: {
       protein_g: i.protein_g,
       fat_g: i.fat_g,
       carbs_g: i.carbs_g,
+      fiber_g: i.fiber_g,
     }))
   );
 
@@ -188,6 +194,7 @@ export async function addSharedMeal(input: {
       total_protein_g: dishTotals.protein_g,
       total_fat_g: dishTotals.fat_g,
       total_carbs_g: dishTotals.carbs_g,
+      total_fiber_g: dishTotals.fiber_g,
     })
     .select("id")
     .single();
@@ -224,6 +231,7 @@ export async function addSharedMeal(input: {
         total_protein_g: profile.totals.protein_g,
         total_fat_g: profile.totals.fat_g,
         total_carbs_g: profile.totals.carbs_g,
+        total_fiber_g: profile.totals.fiber_g,
       })
       .select("id")
       .single();
@@ -240,6 +248,7 @@ export async function addSharedMeal(input: {
           protein_g: Math.round(item.protein_g * ratio * 10) / 10,
           fat_g: Math.round(item.fat_g * ratio * 10) / 10,
           carbs_g: Math.round(item.carbs_g * ratio * 10) / 10,
+          fiber_g: Math.round(item.fiber_g * ratio * 10) / 10,
           sort_order: index,
         }))
       );

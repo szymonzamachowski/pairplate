@@ -112,6 +112,8 @@ export async function createProfiles(profileA: ProfileInput, profileB: ProfileIn
       daily_protein_g: targets.protein_g,
       daily_fat_g: targets.fat_g,
       daily_carbs_g: targets.carbs_g,
+      daily_fiber_g: targets.fiber_g,
+      daily_water_ml: targets.daily_water_ml,
       accent_color: GENDER_ACCENT_COLORS[profile.gender],
       sort_order: index,
     };
@@ -166,6 +168,8 @@ export async function updateProfile(profileId: string, input: ProfileInput) {
       daily_protein_g: targets.protein_g,
       daily_fat_g: targets.fat_g,
       daily_carbs_g: targets.carbs_g,
+      daily_fiber_g: targets.fiber_g,
+      daily_water_ml: targets.daily_water_ml,
       accent_color: GENDER_ACCENT_COLORS[input.gender],
     })
     .eq("id", profileId);

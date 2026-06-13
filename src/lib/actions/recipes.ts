@@ -95,6 +95,7 @@ export async function resolveRecipeDraftItems(
         protein_per_100g: 0,
         fat_per_100g: 0,
         carbs_per_100g: 0,
+        fiber_per_100g: 0,
         created_at: "",
         updated_at: "",
       } as Product);
