@@ -156,7 +156,7 @@ export function GoalTabs({
   };
 
   return (
-    <div className="flex rounded-xl bg-muted p-1">
+    <div className="flex rounded-xl border border-border/40 bg-muted p-1">
       {(Object.keys(labels) as Goal[]).map((key) => (
         <button
           key={key}
@@ -165,8 +165,8 @@ export function GoalTabs({
           className={cn(
             "flex-1 rounded-lg py-3 text-sm transition-all",
             goal === key
-              ? "bg-card text-foreground shadow-sm"
-              : "text-muted-foreground"
+              ? "border border-primary/50 bg-background text-foreground shadow-sm ring-1 ring-primary/30"
+              : "border border-transparent text-muted-foreground hover:text-foreground"
           )}
         >
           {labels[key]}

@@ -33,7 +33,7 @@ export function BottomNav() {
       className="pp-glass fixed inset-x-0 bottom-0 z-50 rounded-t-2xl border-t border-border/30 pb-[env(safe-area-inset-bottom)]"
       style={{ boxShadow: "0 -4px 20px rgba(25, 28, 29, 0.04)" }}
     >
-      <div className="mx-auto flex max-w-lg items-center justify-around px-1 pb-2 pt-2">
+      <div className="mx-auto flex max-w-lg items-center justify-around px-0.5 pb-1.5 pt-1.5">
         {items.map((item) => {
           const Icon = item.icon;
           const active = pathname.startsWith(item.href);
@@ -43,14 +43,16 @@ export function BottomNav() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex min-w-0 flex-1 flex-col items-center gap-1 rounded-xl px-1 py-2 text-[10px] transition-colors",
+                "flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-lg px-0.5 py-1 text-[9px] leading-none transition-colors",
                 active
                   ? "bg-primary/10 text-primary"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <Icon className="h-5 w-5" strokeWidth={active ? 2.25 : 1.75} />
-              <span className="pp-label-caps font-semibold">{item.label}</span>
+              <Icon className="h-4 w-4 shrink-0" strokeWidth={active ? 2.25 : 1.75} />
+              <span className="pp-label-caps max-w-full truncate font-semibold">
+                {item.label}
+              </span>
             </Link>
           );
         })}
