@@ -37,7 +37,7 @@
 ### 1. Instalacja
 
 ```bash
-git clone <url-repozytorium>
+git clone https://github.com/szymonzamachowski/pairplate.git
 cd pairplate
 npm install
 ```
