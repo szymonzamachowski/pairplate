@@ -4,6 +4,11 @@ import { createClient } from "@/lib/supabase/server";
 import { calculateDailyTargets } from "@/lib/nutrition/calculator";
 import { GENDER_ACCENT_COLORS } from "@/lib/constants";
 import { suggestTargetWeight, clampTargetWeight } from "@/lib/nutrition/target-weight";
+import {
+  findOwnedProfile,
+  requireAuthenticatedHousehold,
+} from "@/lib/auth/verify-household";
+import { validateProfileInput } from "@/lib/validation/profile-input";
 import type { ActivityLevel, Gender, Goal, GoalPace } from "@/types/database";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -49,6 +54,11 @@ export interface ProfileInput {
 }
 
 export async function createProfiles(profileA: ProfileInput, profileB: ProfileInput) {
+  const validationA = validateProfileInput(profileA);
+  if (validationA.error) return { error: validationA.error };
+  const validationB = validateProfileInput(profileB);
+  if (validationB.error) return { error: validationB.error };
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -115,7 +125,21 @@ export async function createProfiles(profileA: ProfileInput, profileB: ProfileIn
 }
 
 export async function updateProfile(profileId: string, input: ProfileInput) {
-  const supabase = await createClient();
+  const validation = validateProfileInput(input);
+  if (validation.error) return { error: validation.error };
+
+  let authContext;
+  try {
+    authContext = await requireAuthenticatedHousehold();
+  } catch {
+    return { error: "Brak sesji użytkownika" };
+  }
+
+  if (!findOwnedProfile(authContext.profiles, profileId)) {
+    return { error: "Profil nie należy do Twojego konta" };
+  }
+
+  const supabase = authContext.supabase;
   const targets = calculateDailyTargets(input);
 
   const { error } = await supabase

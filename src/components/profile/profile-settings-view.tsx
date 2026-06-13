@@ -7,6 +7,7 @@ import { StitchHeader, StitchPage } from "@/components/layout/stitch-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { NumericInput } from "@/components/ui/numeric-input";
 import {
   Select,
   SelectContent,
@@ -22,41 +23,34 @@ import type { Profile } from "@/types/database";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
-export function ProfileSettingsView() {
+function profileToForm(profile: Profile): ProfileInput {
+  return {
+    name: profile.name,
+    gender: profile.gender,
+    age: profile.age,
+    height_cm: Number(profile.height_cm),
+    current_weight_kg: Number(profile.current_weight_kg),
+    goal: profile.goal,
+    goal_pace: profile.goal_pace ?? "moderate",
+    target_weight_kg: profile.target_weight_kg
+      ? Number(profile.target_weight_kg)
+      : null,
+    activity_level: profile.activity_level,
+  };
+}
+
+function ProfileSettingsForm({ profile }: { profile: Profile }) {
   const router = useRouter();
-  const { activeProfile } = useActiveProfile();
-  const profile = activeProfile as Profile | undefined;
   const { theme, setTheme } = useTheme();
   const [isPending, startTransition] = useTransition();
-  const [form, setForm] = useState<ProfileInput | null>(null);
-
-  useEffect(() => {
-    if (!profile) return;
-    setForm({
-      name: profile.name,
-      gender: profile.gender,
-      age: profile.age,
-      height_cm: Number(profile.height_cm),
-      current_weight_kg: Number(profile.current_weight_kg),
-      goal: profile.goal,
-      goal_pace: profile.goal_pace ?? "moderate",
-      target_weight_kg: profile.target_weight_kg
-        ? Number(profile.target_weight_kg)
-        : null,
-      activity_level: profile.activity_level,
-    });
-  }, [profile]);
-
-  if (!profile || !form) {
-    return <div className="p-6 text-muted-foreground">Ładowanie...</div>;
-  }
+  const [form, setForm] = useState<ProfileInput>(() => profileToForm(profile));
 
   async function handleSaveProfile() {
     startTransition(async () => {
-      const result = await updateProfile(profile!.id, form!);
+      const result = await updateProfile(profile.id, form);
       if (result.error) toast.error(result.error);
       else {
         toast.success("Zapisano ustawienia");
@@ -67,14 +61,7 @@ export function ProfileSettingsView() {
 
   return (
     <>
-      <StitchHeader
-        variant="title"
-        title="Ustawienia"
-        backHref="/profile"
-        showSwap={false}
-      />
-      <StitchPage>
-        <section className="mb-6 space-y-3">
+      <section className="mb-6 space-y-3">
           <h3 className="pp-label-caps px-1 text-[11px] tracking-[0.12em] text-muted-foreground">
             Twoje cele
           </h3>
@@ -146,10 +133,13 @@ export function ProfileSettingsView() {
               </div>
               <div>
                 <Label>Wiek</Label>
-                <Input
-                  type="number"
+                <NumericInput
                   value={form.age}
-                  onChange={(e) => setForm({ ...form, age: Number(e.target.value) })}
+                  onValueChange={(age) => setForm({ ...form, age })}
+                  min={13}
+                  max={120}
+                  step={1}
+                  decimals={0}
                   className="rounded-2xl"
                 />
               </div>
@@ -157,26 +147,27 @@ export function ProfileSettingsView() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label>Wzrost (cm)</Label>
-                <Input
-                  type="number"
+                <NumericInput
                   value={form.height_cm}
-                  onChange={(e) =>
-                    setForm({ ...form, height_cm: Number(e.target.value) })
-                  }
+                  onValueChange={(height_cm) => setForm({ ...form, height_cm })}
+                  min={100}
+                  max={250}
+                  step={1}
+                  decimals={0}
                   className="rounded-2xl"
                 />
               </div>
               <div>
                 <Label>Waga bazowa (kg)</Label>
-                <Input
-                  type="number"
+                <NumericInput
                   value={form.current_weight_kg}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      current_weight_kg: Number(e.target.value),
-                    })
+                  onValueChange={(current_weight_kg) =>
+                    setForm({ ...form, current_weight_kg })
                   }
+                  min={30}
+                  max={300}
+                  step={0.1}
+                  decimals={1}
                   className="rounded-2xl"
                 />
               </div>
@@ -270,6 +261,28 @@ export function ProfileSettingsView() {
         >
           Wyloguj
         </Button>
+    </>
+  );
+}
+
+export function ProfileSettingsView() {
+  const { activeProfile } = useActiveProfile();
+  const profile = activeProfile as Profile | undefined;
+
+  if (!profile) {
+    return <div className="p-6 text-muted-foreground">Ładowanie...</div>;
+  }
+
+  return (
+    <>
+      <StitchHeader
+        variant="title"
+        title="Ustawienia"
+        backHref="/profile"
+        showSwap={false}
+      />
+      <StitchPage>
+        <ProfileSettingsForm key={profile.id} profile={profile} />
       </StitchPage>
     </>
   );

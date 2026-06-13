@@ -109,19 +109,28 @@ export function AddMealView({
   const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
-    if (query.length === 0) {
-      setResults([]);
-      setIsSearching(false);
-      return;
-    }
-    setIsSearching(true);
+    const trimmedQuery = query.trim();
+    if (!trimmedQuery) return;
+
+    let cancelled = false;
     const timeout = setTimeout(async () => {
-      const data = await searchProducts(query, householdId);
-      setResults(data as Product[]);
-      setIsSearching(false);
+      setIsSearching(true);
+      const data = await searchProducts(trimmedQuery, householdId);
+      if (!cancelled) {
+        setResults(data as Product[]);
+        setIsSearching(false);
+      }
     }, 350);
-    return () => clearTimeout(timeout);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timeout);
+    };
   }, [query, householdId]);
+
+  const trimmedQuery = query.trim();
+  const visibleResults = trimmedQuery ? results : [];
+  const showSearching = trimmedQuery.length > 0 && isSearching;
 
   const draftTotals = sumNutrition(
     draftItems.map((item) => calculateProductNutrition(item.product, item.grams))
@@ -356,7 +365,7 @@ export function AddMealView({
 
           {query.length >= 2 && (
             <p className="mb-4 text-xs text-muted-foreground">
-              {isSearching
+              {showSearching
                 ? "Szukam w lokalnej bazie i Open Food Facts…"
                 : "Wyniki z lokalnej bazy + Open Food Facts (ponad 3 mln produktów)"}
             </p>
@@ -405,9 +414,9 @@ export function AddMealView({
 
           {query.length > 0 ? (
             <ProductList
-              products={results}
+              products={visibleResults}
               onSelect={selectProduct}
-              loading={isSearching}
+              loading={showSearching}
             />
           ) : (
             <>

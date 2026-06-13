@@ -32,7 +32,7 @@ export function suggestTargetWeight(
     return Math.max(floor, modest);
   }
 
-  if (referenceWeightKg >= ceiling) return ceiling;
+  if (referenceWeightKg >= ceiling) return referenceWeightKg;
   if (referenceWeightKg < floor) return floor;
   const modest =
     Math.round((referenceWeightKg + Math.min(5, (ceiling - referenceWeightKg) * 0.5)) * 10) /
@@ -62,9 +62,17 @@ export function targetWeightBounds(
     };
   }
 
+  if (referenceWeightKg >= ceiling) {
+    return {
+      min: referenceWeightKg,
+      max: referenceWeightKg,
+      suggested: referenceWeightKg,
+    };
+  }
+
   return {
     min: referenceWeightKg,
-    max: Math.max(referenceWeightKg, ceiling),
+    max: ceiling,
     suggested: Math.min(Math.max(suggested, referenceWeightKg), ceiling),
   };
 }

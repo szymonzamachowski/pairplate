@@ -34,6 +34,8 @@ export function ActiveProfileProvider({
   useEffect(() => {
     const stored = localStorage.getItem(ACTIVE_PROFILE_KEY);
     const valid = profiles.find((p) => p.id === stored);
+    // Hydrate persisted profile selection after mount.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- client-only localStorage read
     setActiveProfileIdState(valid?.id ?? profiles[0]?.id ?? null);
     setIsReady(true);
   }, [profiles]);

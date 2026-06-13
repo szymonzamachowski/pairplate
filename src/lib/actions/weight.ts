@@ -1,10 +1,29 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import {
+  findOwnedProfile,
+  requireAuthenticatedHousehold,
+} from "@/lib/auth/verify-household";
+import { validateWeightKg } from "@/lib/validation/profile-input";
 import { revalidatePath } from "next/cache";
 
 export async function addWeightLog(profileId: string, weightKg: number, loggedAt: string) {
-  const supabase = await createClient();
+  const validation = validateWeightKg(weightKg);
+  if (validation.error) return { error: validation.error };
+
+  let authContext;
+  try {
+    authContext = await requireAuthenticatedHousehold();
+  } catch {
+    return { error: "Brak sesji użytkownika" };
+  }
+
+  if (!findOwnedProfile(authContext.profiles, profileId)) {
+    return { error: "Profil nie należy do Twojego konta" };
+  }
+
+  const supabase = authContext.supabase;
 
   const { error: logError } = await supabase.from("weight_logs").insert({
     profile_id: profileId,
@@ -39,7 +58,18 @@ export async function updateWeightReminder(
   daysOfWeek: number[],
   enabled: boolean
 ) {
-  const supabase = await createClient();
+  let authContext;
+  try {
+    authContext = await requireAuthenticatedHousehold();
+  } catch {
+    return { error: "Brak sesji użytkownika" };
+  }
+
+  if (!findOwnedProfile(authContext.profiles, profileId)) {
+    return { error: "Profil nie należy do Twojego konta" };
+  }
+
+  const supabase = authContext.supabase;
   const { data: existing } = await supabase
     .from("weight_reminder_settings")
     .select("id")

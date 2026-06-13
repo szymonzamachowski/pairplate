@@ -24,6 +24,7 @@ import {
 import type { RecipeDraftItem, RecipeWithNutrition } from "@/lib/recipes/nutrition";
 import type { SavedRecipe } from "@/types/database";
 import { ExternalLink, Pencil, Plus, Trash2, UtensilsCrossed } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 type ViewMode = "list" | "create" | "edit";
@@ -36,6 +37,7 @@ export function RecipesView({
   initialRecipes: RecipeWithNutrition[];
 }) {
   const { activeProfile } = useActiveProfile();
+  const router = useRouter();
   const [recipes, setRecipes] = useState(initialRecipes);
   const [view, setView] = useState<ViewMode>("list");
   const [detailRecipe, setDetailRecipe] = useState<RecipeWithNutrition | null>(null);
@@ -94,7 +96,7 @@ export function RecipesView({
             });
             if (!result.error) {
               setView("list");
-              window.location.reload();
+              router.refresh();
             }
             return result;
           }}
@@ -129,7 +131,7 @@ export function RecipesView({
             });
             if (!result.error) {
               setView("list");
-              window.location.reload();
+              router.refresh();
             }
             return result;
           }}

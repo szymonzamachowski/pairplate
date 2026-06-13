@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { requireAuthenticatedHousehold } from "@/lib/auth/verify-household";
 import { addSoloMeal } from "@/lib/actions/meals";
 import { buildMealItemFromProduct } from "@/lib/meals/utils";
 import type { MealType, ProductCategory } from "@/types/database";
@@ -221,15 +222,36 @@ export async function addManualShoppingItem(
   productName: string,
   category: ProductCategory = "other"
 ) {
-  const supabase = await createClient();
-  await supabase.from("shopping_list_items").insert({
-    household_id: householdId,
-    product_name: productName,
-    category,
-    is_manual: true,
-  });
+  let authContext;
+  try {
+    authContext = await requireAuthenticatedHousehold();
+  } catch {
+    return { error: "Brak sesji użytkownika" };
+  }
+
+  if (authContext.householdId !== householdId) {
+    return { error: "Brak dostępu do listy zakupów" };
+  }
+
+  const name = productName.trim();
+  if (!name) return { error: "Podaj nazwę produktu" };
+
+  const supabase = authContext.supabase;
+  const { data, error } = await supabase
+    .from("shopping_list_items")
+    .insert({
+      household_id: householdId,
+      product_name: name,
+      category,
+      is_manual: true,
+    })
+    .select("*")
+    .single();
+
+  if (error) return { error: error.message };
+
   revalidatePath("/shopping");
-  return { success: true };
+  return { success: true, item: data };
 }
 
 export async function deleteShoppingItem(itemId: string) {

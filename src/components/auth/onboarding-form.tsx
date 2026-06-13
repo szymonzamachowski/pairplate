@@ -4,6 +4,7 @@ import { BrandLogo } from "@/components/brand/brand-logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { NumericInput } from "@/components/ui/numeric-input";
 import {
   Select,
   SelectContent,
@@ -95,10 +96,13 @@ function ProfileForm({
           </div>
           <div>
             <Label>Wiek</Label>
-            <Input
-              type="number"
+            <NumericInput
               value={value.age}
-              onChange={(e) => onChange({ ...value, age: Number(e.target.value) })}
+              onValueChange={(age) => onChange({ ...value, age })}
+              min={13}
+              max={120}
+              step={1}
+              decimals={0}
               className="pp-input mt-1.5"
             />
           </div>
@@ -106,26 +110,27 @@ function ProfileForm({
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label>Wzrost (cm)</Label>
-            <Input
-              type="number"
+            <NumericInput
               value={value.height_cm}
-              onChange={(e) =>
-                onChange({ ...value, height_cm: Number(e.target.value) })
-              }
+              onValueChange={(height_cm) => onChange({ ...value, height_cm })}
+              min={100}
+              max={250}
+              step={1}
+              decimals={0}
               className="pp-input mt-1.5"
             />
           </div>
           <div>
             <Label>Waga (kg)</Label>
-            <Input
-              type="number"
+            <NumericInput
               value={value.current_weight_kg}
-              onChange={(e) =>
-                onChange({
-                  ...value,
-                  current_weight_kg: Number(e.target.value),
-                })
+              onValueChange={(current_weight_kg) =>
+                onChange({ ...value, current_weight_kg })
               }
+              min={30}
+              max={300}
+              step={0.1}
+              decimals={1}
               className="pp-input mt-1.5"
             />
           </div>

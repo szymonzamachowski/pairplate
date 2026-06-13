@@ -34,6 +34,7 @@ import {
   UtensilsCrossed,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
@@ -74,6 +75,7 @@ export function PlanView({
   const [meals, setMeals] = useState(initialMeals);
   const [showAddForm, setShowAddForm] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   const weekDays = Array.from({ length: 7 }, (_, i) =>
     format(addDays(new Date(), i), "yyyy-MM-dd")
@@ -108,7 +110,7 @@ export function PlanView({
         toast.success("Dodano do planu");
         setMealName("");
         setShowAddForm(false);
-        window.location.reload();
+        router.refresh();
       }
     });
   }
@@ -228,8 +230,9 @@ export function PlanView({
                             onClick={() =>
                               startTransition(async () => {
                                 await deletePlannedMeal(meal.id, householdId);
+                                setMeals((prev) => prev.filter((m) => m.id !== meal.id));
                                 toast.success("Usunięto");
-                                window.location.reload();
+                                router.refresh();
                               })
                             }
                           >

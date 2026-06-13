@@ -22,6 +22,7 @@ import {
 import { cn } from "@/lib/utils";
 import type { ProductCategory, ShoppingListItem } from "@/types/database";
 import { Egg, Leaf, Plus, ShoppingBasket, Trash2, UtensilsCrossed } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 
@@ -44,6 +45,7 @@ export function ShoppingView({
   const [category, setCategory] = useState<ProductCategory>("other");
   const [showAddForm, setShowAddForm] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   const grouped = useMemo(() => {
     const map = new Map<ProductCategory, ShoppingListItem[]>();
@@ -60,11 +62,18 @@ export function ShoppingView({
   async function handleAddManual() {
     if (!newItem.trim()) return;
     startTransition(async () => {
-      await addManualShoppingItem(householdId, newItem.trim(), category);
+      const result = await addManualShoppingItem(householdId, newItem.trim(), category);
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+      if (result.item) {
+        setItems((prev) => [...prev, result.item as ShoppingListItem]);
+      }
       toast.success("Dodano do listy");
       setNewItem("");
       setShowAddForm(false);
-      window.location.reload();
+      router.refresh();
     });
   }
 

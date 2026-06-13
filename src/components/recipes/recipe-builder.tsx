@@ -33,6 +33,19 @@ interface RecipeBuilderProps {
   onCancel?: () => void;
 }
 
+function parseRecipeDescription(description?: string | null) {
+  if (!description) return { sourceUrl: "", notes: "" };
+  const lines = description.split("\n");
+  const sourceLine = lines.find((line) => line.startsWith("Źródło: "));
+  if (sourceLine) {
+    return {
+      sourceUrl: sourceLine.replace("Źródło: ", ""),
+      notes: lines.filter((line) => !line.startsWith("Źródło: ")).join("\n").trim(),
+    };
+  }
+  return { sourceUrl: "", notes: description };
+}
+
 export function RecipeBuilder({
   householdId,
   initialRecipe,
@@ -41,26 +54,15 @@ export function RecipeBuilder({
   onSubmit,
   onCancel,
 }: RecipeBuilderProps) {
+  const parsedDescription = parseRecipeDescription(initialRecipe?.description);
   const [name, setName] = useState(initialRecipe?.name ?? "");
-  const [sourceUrl, setSourceUrl] = useState("");
-  const [notes, setNotes] = useState("");
+  const [sourceUrl, setSourceUrl] = useState(parsedDescription.sourceUrl);
+  const [notes, setNotes] = useState(parsedDescription.notes);
   const [query, setQuery] = useState("");
   const [gramsInput, setGramsInput] = useState("100");
   const [results, setResults] = useState<Product[]>([]);
   const [items, setItems] = useState<RecipeDraftItem[]>(initialItems ?? []);
   const [isPending, startTransition] = useTransition();
-
-  useEffect(() => {
-    if (!initialRecipe?.description) return;
-    const lines = initialRecipe.description.split("\n");
-    const sourceLine = lines.find((l) => l.startsWith("Źródło: "));
-    if (sourceLine) {
-      setSourceUrl(sourceLine.replace("Źródło: ", ""));
-      setNotes(lines.filter((l) => !l.startsWith("Źródło: ")).join("\n").trim());
-    } else {
-      setNotes(initialRecipe.description);
-    }
-  }, [initialRecipe]);
 
   useEffect(() => {
     const timeout = setTimeout(async () => {
