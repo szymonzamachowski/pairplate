@@ -4,7 +4,7 @@ import { BrandLogo } from "@/components/brand/brand-logo";
 import { ProfileAvatar } from "@/components/profile/profile-avatar";
 import { useActiveProfile } from "@/components/providers/active-profile-provider";
 import { cn } from "@/lib/utils";
-import { ArrowLeft, ArrowLeftRight } from "lucide-react";
+import { ArrowLeft, ArrowLeftRight, Settings } from "lucide-react";
 import Link from "next/link";
 
 type StitchHeaderVariant = "brand" | "title" | "split";
@@ -16,6 +16,7 @@ interface StitchHeaderProps {
   onBack?: () => void;
   onSwap?: () => void;
   showSwap?: boolean;
+  settingsHref?: string;
   className?: string;
 }
 
@@ -26,6 +27,7 @@ export function StitchHeader({
   onBack,
   onSwap,
   showSwap = true,
+  settingsHref,
   className,
 }: StitchHeaderProps) {
   const { activeProfile, partnerProfile, setActiveProfileId } = useActiveProfile();
@@ -90,15 +92,28 @@ export function StitchHeader({
         )}
       </div>
 
-      {showSwap && (
-        <button
-          type="button"
-          onClick={handleSwap}
-          className="flex h-10 w-10 items-center justify-center rounded-full text-primary transition-opacity hover:opacity-70"
-          aria-label="Przełącz profil"
-        >
-          <ArrowLeftRight className="h-5 w-5" />
-        </button>
+      {(showSwap || settingsHref) && (
+        <div className="flex items-center gap-1">
+          {settingsHref && (
+            <Link
+              href={settingsHref}
+              className="flex h-10 w-10 items-center justify-center rounded-full text-primary transition-opacity hover:opacity-70"
+              aria-label="Ustawienia"
+            >
+              <Settings className="h-5 w-5" />
+            </Link>
+          )}
+          {showSwap && (
+            <button
+              type="button"
+              onClick={handleSwap}
+              className="flex h-10 w-10 items-center justify-center rounded-full text-primary transition-opacity hover:opacity-70"
+              aria-label="Przełącz profil"
+            >
+              <ArrowLeftRight className="h-5 w-5" />
+            </button>
+          )}
+        </div>
       )}
     </header>
   );

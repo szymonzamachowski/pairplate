@@ -12,7 +12,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { GoalPaceSelector, GoalTabs } from "@/components/profile/goal-pace-selector";
+import { GoalTargetWeightSelector } from "@/components/profile/goal-target-weight";
 import { ACTIVITY_LABELS, GENDER_LABELS } from "@/lib/constants";
+import { applyGoalChange } from "@/lib/nutrition/target-weight";
 import { ProfileAvatar } from "@/components/profile/profile-avatar";
 import { getProfileThemeByGender } from "@/lib/design-system";
 import { createProfiles, type ProfileInput } from "@/lib/actions/auth";
@@ -28,6 +30,7 @@ const defaultProfile = (): ProfileInput => ({
   current_weight_kg: 70,
   goal: "maintain",
   goal_pace: "moderate",
+  target_weight_kg: null,
   activity_level: "moderate",
 });
 
@@ -132,10 +135,31 @@ function ProfileForm({
           <div className="mt-1.5">
             <GoalTabs
               goal={value.goal}
-              onChange={(goal) => onChange({ ...value, goal })}
+              onChange={(goal) =>
+                onChange({
+                  ...value,
+                  ...applyGoalChange(
+                    goal,
+                    value.height_cm,
+                    value.current_weight_kg,
+                    goal === value.goal ? value.target_weight_kg : null
+                  ),
+                })
+              }
             />
           </div>
         </div>
+
+        <GoalTargetWeightSelector
+          goal={value.goal}
+          heightCm={value.height_cm}
+          referenceWeightKg={value.current_weight_kg}
+          targetWeightKg={value.target_weight_kg}
+          onChange={(target_weight_kg) =>
+            onChange({ ...value, target_weight_kg })
+          }
+          compact
+        />
 
         <GoalPaceSelector
           profile={value}

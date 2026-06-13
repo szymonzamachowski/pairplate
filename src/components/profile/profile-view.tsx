@@ -1,47 +1,23 @@
 "use client";
 
-import { BrandLogo } from "@/components/brand/brand-logo";
 import { StitchHeader, StitchPage } from "@/components/layout/stitch-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { GoalPaceSelector, GoalTabs } from "@/components/profile/goal-pace-selector";
 import { useActiveProfile } from "@/components/providers/active-profile-provider";
-import {
-  ACTIVITY_LABELS,
-  GENDER_LABELS,
-  GOAL_LABELS,
-  WEEKDAY_LABELS,
-} from "@/lib/constants";
-import { signOut, updateProfile, type ProfileInput } from "@/lib/actions/auth";
+import { GOAL_LABELS, WEEKDAY_LABELS } from "@/lib/constants";
+import { WeightGoalChart } from "@/components/profile/weight-goal-chart";
 import {
   addWeightLog,
   getWeightHistory,
   updateWeightReminder,
 } from "@/lib/actions/weight";
 import type { DailyLog, Profile, WeightLog, WeightReminderSettings } from "@/types/database";
-import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
-import { Activity, Bell, Moon, Plus, Sun, Target } from "lucide-react";
-import { useTheme } from "next-themes";
+import { Activity, Bell, Plus, Target } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  ResponsiveContainer,
-  Tooltip,
-} from "recharts";
 import { toast } from "sonner";
 
 interface ProfilePageProps {
@@ -55,12 +31,10 @@ export function ProfileView({
   initialReminderByProfile,
   initialHistoryByProfile,
 }: ProfilePageProps) {
-  const { activeProfile, setActiveProfileId } = useActiveProfile();
+  const { activeProfile } = useActiveProfile();
   const profile = activeProfile as Profile | undefined;
-  const { theme, setTheme } = useTheme();
   const [isPending, startTransition] = useTransition();
 
-  const [form, setForm] = useState<ProfileInput | null>(null);
   const [weightInput, setWeightInput] = useState("");
   const [weightDate, setWeightDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [weightLogs, setWeightLogs] = useState<WeightLog[]>([]);
@@ -69,22 +43,12 @@ export function ProfileView({
 
   useEffect(() => {
     if (!profile) return;
-    setForm({
-      name: profile.name,
-      gender: profile.gender,
-      age: profile.age,
-      height_cm: Number(profile.height_cm),
-      current_weight_kg: Number(profile.current_weight_kg),
-      goal: profile.goal,
-      goal_pace: profile.goal_pace ?? "moderate",
-      activity_level: profile.activity_level,
-    });
     setWeightLogs(initialWeightByProfile[profile.id] ?? []);
     setReminder(initialReminderByProfile[profile.id] ?? null);
     setDayHistory(initialHistoryByProfile[profile.id] ?? []);
   }, [profile, initialWeightByProfile, initialReminderByProfile, initialHistoryByProfile]);
 
-  if (!profile || !form) {
+  if (!profile) {
     return <div className="p-6 text-muted-foreground">Ładowanie...</div>;
   }
 
@@ -96,17 +60,20 @@ export function ProfileView({
   const diffStart =
     lastWeight && startWeight ? Number(lastWeight) - Number(startWeight) : null;
 
+  const typedWeight = Number(weightInput);
+  const referenceWeightKg =
+    typedWeight > 0
+      ? typedWeight
+      : lastWeight
+        ? Number(lastWeight)
+        : Number(profile.current_weight_kg);
+  const targetWeightKg = profile.target_weight_kg
+    ? Number(profile.target_weight_kg)
+    : null;
+
   const today = new Date().getDay();
   const showWeightReminder =
     reminder?.enabled && reminder.days_of_week.includes(today);
-
-  async function handleSaveProfile() {
-    startTransition(async () => {
-      const result = await updateProfile(profile!.id, form!);
-      if (result.error) toast.error(result.error);
-      else toast.success("Zapisano profil");
-    });
-  }
 
   async function handleAddWeight() {
     const weight = Number(weightInput);
@@ -137,23 +104,14 @@ export function ProfileView({
 
   return (
     <>
-      <StitchHeader variant="split" title="Mój Profil" />
+      <StitchHeader
+        variant="split"
+        title="Mój Profil"
+        settingsHref="/profile/settings"
+      />
       <StitchPage>
-        <div className="mb-2 flex justify-end">
-          <Button
-            variant="outline"
-            size="icon"
-            className="rounded-full"
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          >
-            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          </Button>
-        </div>
-
         {showWeightReminder && (
-          <div
-            className="mb-6 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-sm"
-          >
+          <div className="mb-6 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-sm">
             Dziś zaplanowany pomiar wagi dla {profile.name}.
           </div>
         )}
@@ -163,44 +121,21 @@ export function ProfileView({
             className="col-span-2 rounded-2xl border border-border/40 bg-card p-5"
             style={{ boxShadow: "0 4px 20px rgba(25, 28, 29, 0.04)" }}
           >
-            <div className="mb-2 flex items-start justify-between">
-              <div>
-                <p className="pp-label-caps text-[11px] text-muted-foreground">
-                  Aktualna waga
-                </p>
-                <h2 className="text-3xl font-semibold">
-                  {lastWeight ? Number(lastWeight).toFixed(1) : "—"}
-                  <span className="ml-1 text-lg text-muted-foreground">kg</span>
-                </h2>
-              </div>
-              {diffStart !== null && (
+            <WeightGoalChart
+              weightLogs={weightLogs}
+              goal={profile.goal}
+              targetWeightKg={targetWeightKg}
+              referenceWeightKg={referenceWeightKg}
+              fallbackStartKg={Number(profile.current_weight_kg)}
+              accentColor={profile.accent_color || "#47645b"}
+              isPreview={typedWeight > 0}
+            />
+            {!targetWeightKg && diffStart !== null && (
+              <div className="mt-3 flex justify-end">
                 <span className="rounded-full bg-primary/10 px-2 py-1 text-xs font-bold text-primary">
                   {diffStart > 0 ? "+" : ""}
-                  {diffStart.toFixed(1)} kg
+                  {diffStart.toFixed(1)} kg od startu
                 </span>
-              )}
-            </div>
-            {weightLogs.length > 1 && (
-              <div className="h-24">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart
-                    data={weightLogs.map((w) => ({
-                      date: format(new Date(w.logged_at), "d MMM", { locale: pl }),
-                      weight: Number(w.weight_kg),
-                    }))}
-                  >
-                    <XAxis dataKey="date" tick={{ fontSize: 10 }} hide />
-                    <YAxis domain={["auto", "auto"]} hide />
-                    <Tooltip />
-                    <Line
-                      type="monotone"
-                      dataKey="weight"
-                      stroke={profile.accent_color || "#47645b"}
-                      strokeWidth={2}
-                      dot={false}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
               </div>
             )}
           </div>
@@ -219,141 +154,6 @@ export function ProfileView({
             <Activity className="mb-2 h-5 w-5 text-[#455f88]" />
             <p className="pp-label-caps text-[10px] text-muted-foreground">Kalorie</p>
             <p className="font-medium">{profile.daily_calories} kcal</p>
-          </div>
-        </section>
-
-        <section className="mb-6 space-y-3">
-          <h3 className="pp-label-caps px-1 text-[11px] tracking-[0.12em] text-muted-foreground">
-            Twoje cele
-          </h3>
-          <GoalTabs
-            goal={form.goal}
-            onChange={(goal) => setForm({ ...form, goal })}
-          />
-          <GoalPaceSelector
-            profile={form}
-            onChange={(goal_pace) => setForm({ ...form, goal_pace })}
-          />
-        </section>
-
-        <section
-          className="mb-6 overflow-hidden rounded-2xl border border-border/40 bg-card"
-          style={{ boxShadow: "0 4px 20px rgba(25, 28, 29, 0.04)" }}
-        >
-          <div className="space-y-4 p-5">
-            <h3 className="text-base font-medium">Dane profilu</h3>
-          <div>
-            <Label>Imię</Label>
-            <Input
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="rounded-2xl"
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label>Płeć</Label>
-              <Select
-                value={form.gender}
-                onValueChange={(v) =>
-                  setForm({ ...form, gender: v as ProfileInput["gender"] })
-                }
-              >
-                <SelectTrigger className="rounded-2xl">
-                  <SelectValue placeholder="Wybierz płeć">
-                    {GENDER_LABELS[form.gender]}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(GENDER_LABELS).map(([k, v]) => (
-                    <SelectItem key={k} value={k}>
-                      {v}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Wiek</Label>
-              <Input
-                type="number"
-                value={form.age}
-                onChange={(e) => setForm({ ...form, age: Number(e.target.value) })}
-                className="rounded-2xl"
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label>Wzrost (cm)</Label>
-              <Input
-                type="number"
-                value={form.height_cm}
-                onChange={(e) =>
-                  setForm({ ...form, height_cm: Number(e.target.value) })
-                }
-                className="rounded-2xl"
-              />
-            </div>
-            <div>
-              <Label>Waga (kg)</Label>
-              <Input
-                type="number"
-                value={form.current_weight_kg}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    current_weight_kg: Number(e.target.value),
-                  })
-                }
-                className="rounded-2xl"
-              />
-            </div>
-          </div>
-          <div>
-            <Label>Aktywność</Label>
-            <Select
-              value={form.activity_level}
-              onValueChange={(v) =>
-                setForm({
-                  ...form,
-                  activity_level: v as ProfileInput["activity_level"],
-                })
-              }
-            >
-              <SelectTrigger className="rounded-2xl">
-                <SelectValue placeholder="Wybierz aktywność">
-                  {ACTIVITY_LABELS[form.activity_level]}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(ACTIVITY_LABELS).map(([k, v]) => (
-                  <SelectItem key={k} value={k}>
-                    {v}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="rounded-2xl bg-muted/40 p-4 text-sm">
-            <p className="font-medium">Obliczone cele</p>
-            <p className="text-muted-foreground">
-              {profile.daily_calories} kcal · B {profile.daily_protein_g} g · W{" "}
-              {profile.daily_carbs_g} g · T {profile.daily_fat_g} g
-            </p>
-            <p className="mt-2 text-xs text-muted-foreground">
-              Zapisz profil po zmianie tempa, aby przeliczyć cele.
-            </p>
-          </div>
-
-          <Button
-            className="w-full rounded-2xl"
-            disabled={isPending}
-            onClick={handleSaveProfile}
-          >
-            Zapisz profil
-          </Button>
           </div>
         </section>
 
@@ -382,7 +182,11 @@ export function ProfileView({
               />
             </div>
           </div>
-          <Button className="mt-4 w-full rounded-2xl" onClick={handleAddWeight}>
+          <Button
+            className="mt-4 w-full rounded-2xl"
+            disabled={isPending}
+            onClick={handleAddWeight}
+          >
             <Plus className="mr-2 h-4 w-4" />
             Zapisz pomiar
           </Button>
@@ -422,9 +226,7 @@ export function ProfileView({
               </div>
               <div>
                 <p className="font-medium">Przypomnienia o wadze</p>
-                <p className="text-sm text-muted-foreground">
-                  {ACTIVITY_LABELS[profile.activity_level]}
-                </p>
+                <p className="text-sm text-muted-foreground">Wybierz dni tygodnia</p>
               </div>
             </div>
             <Switch
@@ -488,22 +290,6 @@ export function ProfileView({
             ))
           )}
         </section>
-
-        <div className="flex flex-col items-center gap-3 rounded-2xl border border-border/40 bg-card p-6 text-center">
-          <BrandLogo variant="icon" className="h-12 w-12" />
-          <BrandLogo variant="wordmark" className="h-7" />
-          <p className="text-sm text-muted-foreground">
-            PairPlate — wspólne liczenie kalorii dla dwojga
-          </p>
-        </div>
-
-        <Button
-          variant="outline"
-          className="mt-6 w-full rounded-2xl"
-          onClick={() => signOut()}
-        >
-          Wyloguj
-        </Button>
       </StitchPage>
     </>
   );

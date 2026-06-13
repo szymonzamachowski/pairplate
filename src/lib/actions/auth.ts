@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { calculateDailyTargets } from "@/lib/nutrition/calculator";
 import { GENDER_ACCENT_COLORS } from "@/lib/constants";
+import { suggestTargetWeight, clampTargetWeight } from "@/lib/nutrition/target-weight";
 import type { ActivityLevel, Gender, Goal, GoalPace } from "@/types/database";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -43,6 +44,7 @@ export interface ProfileInput {
   current_weight_kg: number;
   goal: Goal;
   goal_pace: GoalPace;
+  target_weight_kg: number | null;
   activity_level: ActivityLevel;
 }
 
@@ -81,6 +83,20 @@ export async function createProfiles(profileA: ProfileInput, profileB: ProfileIn
       current_weight_kg: profile.current_weight_kg,
       goal: profile.goal,
       goal_pace: profile.goal_pace,
+      target_weight_kg:
+        profile.goal === "maintain"
+          ? null
+          : clampTargetWeight(
+              profile.goal,
+              profile.height_cm,
+              profile.current_weight_kg,
+              profile.target_weight_kg ??
+                suggestTargetWeight(
+                  profile.goal,
+                  profile.height_cm,
+                  profile.current_weight_kg
+                )
+            ),
       activity_level: profile.activity_level,
       daily_calories: targets.daily_calories,
       daily_protein_g: targets.protein_g,
@@ -112,6 +128,15 @@ export async function updateProfile(profileId: string, input: ProfileInput) {
       current_weight_kg: input.current_weight_kg,
       goal: input.goal,
       goal_pace: input.goal_pace,
+      target_weight_kg:
+        input.goal === "maintain"
+          ? null
+          : clampTargetWeight(
+              input.goal,
+              input.height_cm,
+              input.current_weight_kg,
+              input.target_weight_kg
+            ),
       activity_level: input.activity_level,
       daily_calories: targets.daily_calories,
       daily_protein_g: targets.protein_g,

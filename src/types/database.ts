@@ -44,6 +44,7 @@ export interface Profile {
   current_weight_kg: number;
   goal: Goal;
   goal_pace: GoalPace;
+  target_weight_kg: number | null;
   activity_level: ActivityLevel;
   daily_calories: number;
   daily_protein_g: number;
