@@ -11,13 +11,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  ACTIVITY_LABELS,
-  GENDER_LABELS,
-  GOAL_LABELS,
-} from "@/lib/constants";
+import { GoalPaceSelector, GoalTabs } from "@/components/profile/goal-pace-selector";
+import { ACTIVITY_LABELS, GENDER_LABELS } from "@/lib/constants";
 import { profileTheme } from "@/lib/design-system";
 import { createProfiles, type ProfileInput } from "@/lib/actions/auth";
+import type { GoalPace } from "@/types/database";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
@@ -28,6 +26,7 @@ const defaultProfile = (): ProfileInput => ({
   height_cm: 170,
   current_weight_kg: 70,
   goal: "maintain",
+  goal_pace: "moderate",
   activity_level: "moderate",
 });
 
@@ -117,22 +116,19 @@ function ProfileForm({
         </div>
         <div>
           <Label>Cel</Label>
-          <Select
-            value={value.goal}
-            onValueChange={(v) => v && onChange({ ...value, goal: v as ProfileInput["goal"] })}
-          >
-            <SelectTrigger className="pp-input mt-1.5">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {Object.entries(GOAL_LABELS).map(([k, label]) => (
-                <SelectItem key={k} value={k}>
-                  {label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="mt-1.5">
+            <GoalTabs
+              goal={value.goal}
+              onChange={(goal) => onChange({ ...value, goal })}
+            />
+          </div>
         </div>
+
+        <GoalPaceSelector
+          profile={value}
+          onChange={(goal_pace: GoalPace) => onChange({ ...value, goal_pace })}
+        />
+
         <div>
           <Label>Aktywność</Label>
           <Select

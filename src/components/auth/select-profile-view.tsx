@@ -1,14 +1,15 @@
 "use client";
 
+import { BrandLogo } from "@/components/brand/brand-logo";
+import { ProfileAvatar } from "@/components/profile/profile-avatar";
 import { profileTheme } from "@/lib/design-system";
 import { ACTIVE_PROFILE_KEY } from "@/lib/constants";
 import type { Profile } from "@/types/database";
-import { Sparkles, UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 const profileMeta = [
-  { tagline: "Kuchenny mistrz", theme: profileTheme.profile1, Icon: UserRound },
-  { tagline: "Esteta smaku", theme: profileTheme.profile2, Icon: Sparkles },
+  { tagline: "Kuchenny mistrz", theme: profileTheme.profile1 },
+  { tagline: "Esteta smaku", theme: profileTheme.profile2 },
 ] as const;
 
 export function SelectProfileView({ profiles }: { profiles: Profile[] }) {
@@ -22,9 +23,7 @@ export function SelectProfileView({ profiles }: { profiles: Profile[] }) {
   return (
     <div className="pp-gradient-bg mx-auto flex min-h-dvh max-w-lg flex-col items-center justify-center px-5 py-12">
       <header className="mb-10 text-center">
-        <h1 className="text-3xl font-semibold tracking-[0.02em] text-primary">
-          PairPlate
-        </h1>
+        <BrandLogo variant="full" className="mx-auto h-10" priority />
         <p className="mt-3 text-lg font-medium text-foreground">
           Kto dzisiaj gotuje?
         </p>
@@ -35,7 +34,6 @@ export function SelectProfileView({ profiles }: { profiles: Profile[] }) {
         {profiles.map((profile, index) => {
           const meta = profileMeta[index] ?? profileMeta[0];
           const color = profile.accent_color || meta.theme.main;
-          const Icon = meta.Icon;
 
           return (
             <button
@@ -46,12 +44,13 @@ export function SelectProfileView({ profiles }: { profiles: Profile[] }) {
               style={{ boxShadow: "0 20px 40px rgba(25, 28, 29, 0.04)" }}
             >
               <div className="flex h-full flex-col items-center justify-center p-8">
-                <div
-                  className="mb-4 flex h-16 w-16 items-center justify-center rounded-full"
-                  style={{ backgroundColor: `${color}18` }}
-                >
-                  <Icon className="h-8 w-8" style={{ color }} />
-                </div>
+                <ProfileAvatar
+                  profile={profile}
+                  profiles={profiles}
+                  size="xl"
+                  className="mb-4 ring-4 ring-background/80"
+                  priority={index === 0}
+                />
                 <p className="text-xl font-semibold text-foreground">{profile.name}</p>
                 <p
                   className="pp-label-caps mt-2 text-[11px] tracking-[0.14em]"

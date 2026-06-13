@@ -1,7 +1,8 @@
 "use client";
 
+import { BrandLogo } from "@/components/brand/brand-logo";
+import { ProfileAvatar } from "@/components/profile/profile-avatar";
 import { useActiveProfile } from "@/components/providers/active-profile-provider";
-import { profileTheme } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
 import { ArrowLeft, ArrowLeftRight } from "lucide-react";
 import Link from "next/link";
@@ -27,7 +28,7 @@ export function StitchHeader({
   showSwap = true,
   className,
 }: StitchHeaderProps) {
-  const { activeProfile, partnerProfile, setActiveProfileId } = useActiveProfile();
+  const { activeProfile, partnerProfile, profiles, setActiveProfileId } = useActiveProfile();
 
   function handleSwap() {
     if (onSwap) {
@@ -38,10 +39,6 @@ export function StitchHeader({
       setActiveProfileId(partnerProfile.id);
     }
   }
-
-  const accent =
-    activeProfile?.accent_color ??
-    profileTheme.profile1.main;
 
   return (
     <header
@@ -70,34 +67,17 @@ export function StitchHeader({
           ))}
 
         {variant === "brand" && (
-          <>
-            <div
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 text-sm font-semibold text-white"
-              style={{
-                borderColor: `${accent}33`,
-                backgroundColor: accent,
-              }}
-            >
-              {activeProfile?.name?.charAt(0).toUpperCase() ?? "P"}
-            </div>
-            <h1 className="text-xl font-semibold tracking-[0.02em] text-primary">
-              PairPlate
-            </h1>
-          </>
+          <BrandLogo variant="full" className="h-8" priority />
         )}
 
         {(variant === "title" || variant === "split") && (
           <>
-            {!backHref && (
-              <div
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 text-sm font-semibold text-white"
-                style={{
-                  borderColor: `${accent}33`,
-                  backgroundColor: accent,
-                }}
-              >
-                {activeProfile?.name?.charAt(0).toUpperCase() ?? "P"}
-              </div>
+            {!backHref && activeProfile && (
+              <ProfileAvatar
+                profile={activeProfile}
+                profiles={profiles}
+                size="md"
+              />
             )}
             <h1
               className={cn(

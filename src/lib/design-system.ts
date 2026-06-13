@@ -1,4 +1,4 @@
-/** PairPlate design tokens — aligned with UI+logos brand board & DESIGN.md */
+/** PairPlate design tokens */
 
 export const brand = {
   primary: "#47645b",

@@ -1,5 +1,6 @@
 "use client";
 
+import { BarcodeScannerSheet } from "@/components/products/barcode-scanner-sheet";
 import {
   StitchHeader,
   StitchPage,
@@ -24,14 +25,17 @@ import {
 import type { MealItemInput } from "@/lib/meals/utils";
 import {
   createCustomProduct,
+  importOffProduct,
+  lookupProductByBarcode,
   searchProducts,
 } from "@/lib/actions/products";
 import { resolveRecipeDraftItems, saveRecipe } from "@/lib/actions/recipes";
 import { calculateProductNutrition, sumNutrition } from "@/lib/nutrition/calculator";
 import type { RecipeWithNutrition } from "@/lib/recipes/nutrition";
+import { ProfileAvatar } from "@/components/profile/profile-avatar";
 import { profileTheme } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
-import type { MealType, Product } from "@/types/database";
+import type { MealType, Product, Profile } from "@/types/database";
 import {
   CheckCircle2,
   CirclePlus,
@@ -39,6 +43,7 @@ import {
   Heart,
   Leaf,
   Plus,
+  ScanLine,
   Search,
   Trash2,
   Users,
@@ -74,7 +79,7 @@ export function AddMealView({
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialMeal = (searchParams.get("meal") as MealType) || "lunch";
-  const { activeProfile, partnerProfile } = useActiveProfile();
+  const { activeProfile, partnerProfile, profiles } = useActiveProfile();
 
   const [phase, setPhase] = useState<Phase>("search");
   const [searchTab, setSearchTab] = useState<SearchTab>("recent");
@@ -100,16 +105,21 @@ export function AddMealView({
     barcode: "",
   });
   const [isPending, startTransition] = useTransition();
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
     if (query.length === 0) {
       setResults([]);
+      setIsSearching(false);
       return;
     }
+    setIsSearching(true);
     const timeout = setTimeout(async () => {
       const data = await searchProducts(query, householdId);
       setResults(data as Product[]);
-    }, 250);
+      setIsSearching(false);
+    }, 350);
     return () => clearTimeout(timeout);
   }, [query, householdId]);
 
@@ -158,6 +168,32 @@ export function AddMealView({
     setQuery("");
     setPhase("builder");
     toast.success(`Dodano ${product.name}`);
+  }
+
+  function selectProduct(product: Product) {
+    if (product.id.startsWith("off-") && product.barcode) {
+      startTransition(async () => {
+        const result = await importOffProduct(product.barcode!, householdId);
+        if (result.error || !result.product) {
+          toast.error(result.error ?? "Nie udało się pobrać produktu");
+          return;
+        }
+        addDraftItem(result.product as Product);
+      });
+      return;
+    }
+    addDraftItem(product);
+  }
+
+  function handleBarcodeScan(raw: string) {
+    startTransition(async () => {
+      const result = await lookupProductByBarcode(raw, householdId);
+      if (result.error || !result.product) {
+        toast.error(result.error ?? "Nie znaleziono produktu");
+        return;
+      }
+      addDraftItem(result.product as Product);
+    });
   }
 
   function handleModeChange(next: "solo" | "shared") {
@@ -306,9 +342,25 @@ export function AddMealView({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Szukaj składników..."
-              className="h-14 rounded-xl border-none bg-muted/60 pl-12 text-base shadow-sm"
+              className="h-14 rounded-xl border-none bg-muted/60 pl-12 pr-14 text-base shadow-sm"
             />
+            <button
+              type="button"
+              onClick={() => setScannerOpen(true)}
+              className="absolute top-1/2 right-3 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-xl text-primary transition-colors hover:bg-primary/10"
+              aria-label="Skanuj kod kreskowy"
+            >
+              <ScanLine className="h-5 w-5" />
+            </button>
           </div>
+
+          {query.length >= 2 && (
+            <p className="mb-4 text-xs text-muted-foreground">
+              {isSearching
+                ? "Szukam w lokalnej bazie i Open Food Facts…"
+                : "Wyniki z lokalnej bazy + Open Food Facts (ponad 3 mln produktów)"}
+            </p>
+          )}
 
           <div className="mb-6 flex rounded-xl bg-muted p-1">
             {(
@@ -352,7 +404,11 @@ export function AddMealView({
           </div>
 
           {query.length > 0 ? (
-            <ProductList products={results} onSelect={addDraftItem} />
+            <ProductList
+              products={results}
+              onSelect={selectProduct}
+              loading={isSearching}
+            />
           ) : (
             <>
               <StitchSectionLabel>
@@ -362,7 +418,7 @@ export function AddMealView({
                     ? "Ostatnio używane"
                     : "Najczęściej używane"}
               </StitchSectionLabel>
-              <ProductList products={tabProducts} onSelect={addDraftItem} />
+              <ProductList products={tabProducts} onSelect={selectProduct} />
 
               {searchTab === "favorites" && shortcuts.favorites.length > 0 && (
                 <div className="-mx-5 mt-8 flex gap-3 overflow-x-auto px-5 pb-2">
@@ -370,7 +426,7 @@ export function AddMealView({
                     <button
                       key={product.id}
                       type="button"
-                      onClick={() => addDraftItem(product as Product)}
+                      onClick={() => selectProduct(product as Product)}
                       className="flex min-w-[140px] flex-col items-center rounded-2xl border border-border/40 bg-card p-4 text-center shadow-sm"
                     >
                       <Heart className="mb-2 h-5 w-5 fill-primary text-primary" />
@@ -450,6 +506,12 @@ export function AddMealView({
           defaultMealType={mealType}
           mode="load"
           onSelectRecipe={handleSelectRecipe}
+        />
+
+        <BarcodeScannerSheet
+          open={scannerOpen}
+          onOpenChange={setScannerOpen}
+          onScan={handleBarcodeScan}
         />
       </>
     );
@@ -533,6 +595,8 @@ export function AddMealView({
 
           <div className="grid gap-4">
             <SplitPortionCard
+              profile={activeProfile}
+              profiles={profiles}
               name={activeProfile?.name ?? "Profil 1"}
               color={activeColor}
               grams={activeGrams}
@@ -540,6 +604,8 @@ export function AddMealView({
               onChange={setActiveGrams}
             />
             <SplitPortionCard
+              profile={partnerProfile}
+              profiles={profiles}
               name={partnerProfile?.name ?? "Profil 2"}
               color={partnerColor}
               grams={partnerGrams}
@@ -795,10 +861,20 @@ export function AddMealView({
 function ProductList({
   products,
   onSelect,
+  loading = false,
 }: {
   products: Product[];
   onSelect: (product: Product) => void;
+  loading?: boolean;
 }) {
+  if (loading) {
+    return (
+      <p className="py-8 text-center text-sm text-muted-foreground">
+        Wyszukiwanie…
+      </p>
+    );
+  }
+
   if (products.length === 0) {
     return (
       <p className="py-8 text-center text-sm text-muted-foreground">
@@ -826,7 +902,14 @@ function ProductList({
               <p className="font-medium">{product.name}</p>
               <p className="text-sm text-muted-foreground">
                 {product.kcal_per_100g} kcal / 100g
+                {product.brand ? ` · ${product.brand}` : ""}
               </p>
+              {(product.source === "open_food_facts" ||
+                product.id.startsWith("off-")) && (
+                <span className="pp-label-caps mt-1 inline-block text-[10px] text-primary">
+                  Open Food Facts
+                </span>
+              )}
             </div>
             <CirclePlus className="h-5 w-5 text-muted-foreground group-hover:text-primary" />
           </button>
@@ -837,12 +920,16 @@ function ProductList({
 }
 
 function SplitPortionCard({
+  profile,
+  profiles,
   name,
   color,
   grams,
   kcal,
   onChange,
 }: {
+  profile?: Profile | null;
+  profiles?: Profile[];
   name: string;
   color: string;
   grams: string;
@@ -859,12 +946,16 @@ function SplitPortionCard({
       }}
     >
       <div className="mb-4 flex items-center gap-3">
-        <div
-          className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold text-white"
-          style={{ backgroundColor: color }}
-        >
-          {name.charAt(0)}
-        </div>
+        {profile ? (
+          <ProfileAvatar profile={profile} profiles={profiles} size="md" />
+        ) : (
+          <div
+            className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold text-white"
+            style={{ backgroundColor: color }}
+          >
+            {name.charAt(0)}
+          </div>
+        )}
         <h3 className="text-lg font-medium">Porcja {name}</h3>
       </div>
       <label className="pp-label-caps mb-1 block text-[11px] text-muted-foreground">

@@ -2,8 +2,8 @@ import type { Product } from "@/types/database";
 
 /**
  * Product data provider abstraction.
- * MVP uses Supabase local/custom products.
- * Future: Open Food Facts, barcode scanner, external APIs, AI meal analysis.
+ * Implemented: Supabase local/custom + Open Food Facts (search + barcode cache).
+ * Future: paid APIs, AI meal analysis.
  */
 export interface ProductSearchParams {
   query: string;

@@ -1,7 +1,15 @@
+import {
+  GOAL_PACE_OPTIONS,
+  KCAL_PER_KG_BODY,
+  kcalAdjustmentForPace,
+  kgPerWeekFromKcalAdjustment,
+  minimumDailyCalories,
+} from "@/lib/nutrition/goal-pace";
 import type {
   ActivityLevel,
   Gender,
   Goal,
+  GoalPace,
   NutritionTotals,
   Product,
 } from "@/types/database";
@@ -14,18 +22,13 @@ const ACTIVITY_MULTIPLIERS: Record<ActivityLevel, number> = {
   very_active: 1.9,
 };
 
-const GOAL_ADJUSTMENTS: Record<Goal, number> = {
-  loss: -500,
-  maintain: 0,
-  gain: 300,
-};
-
 export interface ProfileNutritionInput {
   gender: Gender;
   age: number;
   height_cm: number;
   current_weight_kg: number;
   goal: Goal;
+  goal_pace: GoalPace;
   activity_level: ActivityLevel;
 }
 
@@ -33,12 +36,15 @@ export interface CalculatedTargets extends NutritionTotals {
   daily_calories: number;
   bmr: number;
   tdee: number;
+  calorie_adjustment: number;
+  requested_kg_per_week: number;
+  effective_kg_per_week: number;
+  warnings: string[];
 }
 
 export function calculateBmr(input: ProfileNutritionInput): number {
   const { gender, age, height_cm, current_weight_kg } = input;
-  const base =
-    10 * current_weight_kg + 6.25 * height_cm - 5 * age;
+  const base = 10 * current_weight_kg + 6.25 * height_cm - 5 * age;
 
   return gender === "male" ? base + 5 : base - 161;
 }
@@ -53,17 +59,82 @@ export function calculateDailyTargets(
 ): CalculatedTargets {
   const bmr = calculateBmr(input);
   const tdee = bmr * ACTIVITY_MULTIPLIERS[input.activity_level];
-  const daily_calories = Math.max(
-    1200,
-    Math.round(tdee + GOAL_ADJUSTMENTS[input.goal])
-  );
+  const warnings: string[] = [];
+  const minCalories = minimumDailyCalories(input.gender);
 
-  const proteinPerKg = input.goal === "gain" ? 2 : 1.8;
-  const protein_g = Math.round(input.current_weight_kg * proteinPerKg * 10) / 10;
+  let daily_calories = Math.round(tdee);
+  let calorie_adjustment = 0;
+  let requestedKg = 0;
+  let effectiveKg = 0;
+
+  if (input.goal === "maintain") {
+    daily_calories = Math.round(tdee);
+  } else {
+    requestedKg = GOAL_PACE_OPTIONS[input.goal_pace].kgPerWeek;
+    const requestedKcal = kcalAdjustmentForPace(requestedKg);
+
+    if (input.goal === "loss") {
+      const maxDeficit = Math.min(Math.round(tdee * 0.3), 1100);
+      const deficit = Math.min(requestedKcal, maxDeficit);
+
+      if (requestedKcal > maxDeficit) {
+        warnings.push(
+          `Deficyt ograniczony do ${maxDeficit} kcal/d (maks. 30% TDEE lub 1100 kcal) — bezpieczniejsza redukcja.`
+        );
+      }
+
+      daily_calories = Math.max(minCalories, Math.round(tdee - deficit));
+      calorie_adjustment = daily_calories - Math.round(tdee);
+
+      if (Math.round(tdee - deficit) < minCalories) {
+        warnings.push(
+          `Ze względu na minimum ${minCalories} kcal/d tempo będzie wolniejsze niż wybrane.`
+        );
+      }
+
+      if (input.goal_pace === "fast") {
+        warnings.push(
+          "Tempo 1 kg/tyg. jest agresywne. Przy długotrwałej redukcji rozważ konsultację z dietetykiem."
+        );
+      }
+    } else {
+      const maxSurplus =
+        input.goal_pace === "fast"
+          ? Math.min(Math.round(tdee * 0.15), 750)
+          : Math.min(Math.round(tdee * 0.12), 550);
+
+      const surplus = Math.min(requestedKcal, maxSurplus);
+
+      if (requestedKcal > maxSurplus) {
+        warnings.push(
+          `Nadwyżka ograniczona do ${maxSurplus} kcal/d — zdrowszy przyrost masy mięśniowej.`
+        );
+      }
+
+      daily_calories = Math.round(tdee + surplus);
+      calorie_adjustment = surplus;
+
+      if (input.goal_pace === "fast") {
+        warnings.push(
+          "Przy 1 kg/tyg. znaczna część to tłuszcz. Dla masy mięśniowej lepsze tempo umiarkowane + trening siłowy."
+        );
+      }
+    }
+
+    effectiveKg = kgPerWeekFromKcalAdjustment(Math.abs(calorie_adjustment));
+  }
+
+  const proteinPerKg =
+    input.goal === "gain" ? 2 : input.goal === "loss" ? 2 : 1.8;
+  const protein_g =
+    Math.round(input.current_weight_kg * proteinPerKg * 10) / 10;
   const fatCalories = daily_calories * 0.25;
   const fat_g = Math.round((fatCalories / 9) * 10) / 10;
   const proteinCalories = protein_g * 4;
-  const carbsCalories = Math.max(0, daily_calories - proteinCalories - fatCalories);
+  const carbsCalories = Math.max(
+    0,
+    daily_calories - proteinCalories - fatCalories
+  );
   const carbs_g = Math.round((carbsCalories / 4) * 10) / 10;
 
   return {
@@ -74,6 +145,10 @@ export function calculateDailyTargets(
     protein_g,
     fat_g,
     carbs_g,
+    calorie_adjustment,
+    requested_kg_per_week: requestedKg,
+    effective_kg_per_week: effectiveKg,
+    warnings,
   };
 }
 
@@ -127,3 +202,5 @@ function round(value: number, decimals = 1): number {
   const factor = 10 ** decimals;
   return Math.round(value * factor) / factor;
 }
+
+export { KCAL_PER_KG_BODY };

@@ -22,7 +22,7 @@
 | Warstwa | Technologia |
 |--------|-------------|
 | Frontend | Next.js 16 (App Router), React 19, TypeScript |
-| UI | Tailwind CSS 4, shadcn/ui, design system ze stitch mockups |
+| UI | Tailwind CSS 4, shadcn/ui, design system PairPlate |
 | Backend | Supabase (Auth, Postgres, RLS) |
 | PWA | Serwist |
 | Wykresy | Recharts |
@@ -54,27 +54,41 @@ cp .env.example .env.local
 |---------|------|
 | `NEXT_PUBLIC_SUPABASE_URL` | URL projektu Supabase |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Klucz publiczny `anon` |
-| `SUPABASE_SERVICE_ROLE_KEY` | Tylko lokalnie — do skryptu seed (nie commituj!) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Tylko serwer — cache Open Food Facts (nie commituj!) |
 
 ### 3. Baza danych
 
-W **Supabase SQL Editor** uruchom migrację:
+W **Supabase SQL Editor** uruchom migracje (kolejno):
 
 ```
 supabase/migrations/20250613000000_initial_schema.sql
+supabase/migrations/20250613100000_product_barcode_cache.sql
+supabase/migrations/20250613200000_goal_pace_and_off_security.sql
 ```
 
 Migracja tworzy tabele, RLS, seed produktów i strukturę `households` pod parę.
 
-### 4. (Opcjonalnie) Konto testowe
+## Baza składników i skaner
 
-```bash
-node scripts/seed-test-account.mjs
-```
+PairPlate korzysta z **hybrydowego modelu**:
 
-Domyślne dane: `test@example.com` / `***` (profile: Ania + Tomek).
+| Warstwa | Źródło | Opis |
+|--------|--------|------|
+| Lokalna | Supabase `products` | ~25 podstawowych składników + własne produkty użytkownika |
+| Zewnętrzna | [Open Food Facts](https://world.openfoodfacts.org) | 3M+ produktów z kodami EAN (PL/EU) |
+| Cache | Supabase (global) | Po skanowaniu/wyborze produkt OFF trafia do bazy — szybsze kolejne wyszukiwania |
 
-### 5. Uruchomienie
+**Wyszukiwanie tekstowe** — lokalna baza + Open Food Facts (wyniki oznaczone etykietą).
+
+**Skaner kodów** — ekran Dodaj → ikona skanera obok pola wyszukiwania:
+
+- kamera (PWA / HTTPS na telefonie)
+- ręczne wpisanie kodu EAN
+- pobranie kcal i makro na 100 g, zapis w cache
+
+Pliki: `src/lib/products/open-food-facts.ts`, `src/components/products/barcode-scanner-sheet.tsx`
+
+### 4. Uruchomienie
 
 ```bash
 npm run dev
@@ -107,21 +121,20 @@ src/
 │   ├── nutrition/    # Kalkulator makro
 │   └── design-system.ts
 supabase/migrations/  # Schemat Postgres + RLS
-scripts/              # Seed konta testowego
-UI+logos/             # Mockupy i materiały designu (stitch)
-public/brand/         # Placeholder logo (podmień własnym)
+public/brand/         # Logo i ikony aplikacji
 ```
 
 ## Architektura pod rozwój
 
-- **`src/lib/products/provider.ts`** — abstrakcja pod Open Food Facts / skaner
+- **`src/lib/products/open-food-facts.ts`** — integracja Open Food Facts (search + barcode)
+- **`src/lib/products/provider.ts`** — abstrakcja pod kolejne API (płatne bazy, AI)
 - **`ai_meal_analyses`** — tabela pod analizę AI (tekst/zdjęcie)
 - **RLS** na wszystkich tabelach użytkownika
 - **`households`** — wspólna przestrzeń pary, gotowa pod zaproszenia i SaaS
 
 ## Design
 
-UI oparte o mockupy w `UI+logos/stitch_pairplate_shared_nutrition_ui/`:
+Paleta i komponenty zdefiniowane w `src/lib/design-system.ts`:
 
 - Primary: `#47645B`
 - Mint container: `#D1F2E6`
@@ -131,7 +144,7 @@ UI oparte o mockupy w `UI+logos/stitch_pairplate_shared_nutrition_ui/`:
 ## Bezpieczeństwo
 
 - Nigdy nie commituj `.env.local` ani `SUPABASE_SERVICE_ROLE_KEY`
-- Klucz `service_role` używaj wyłącznie w skryptach lokalnych / CI backend
+- Klucz `service_role` używaj wyłącznie po stronie serwera (Server Actions), nigdy w kodzie klienta
 
 ## Licencja
 

@@ -1,5 +1,6 @@
 export type Gender = "male" | "female";
 export type Goal = "loss" | "maintain" | "gain";
+export type GoalPace = "slow" | "moderate" | "fast";
 export type ActivityLevel =
   | "sedentary"
   | "light"
@@ -42,6 +43,7 @@ export interface Profile {
   height_cm: number;
   current_weight_kg: number;
   goal: Goal;
+  goal_pace: GoalPace;
   activity_level: ActivityLevel;
   daily_calories: number;
   daily_protein_g: number;

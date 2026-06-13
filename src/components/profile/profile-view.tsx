@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { GoalPaceSelector, GoalTabs } from "@/components/profile/goal-pace-selector";
 import { useActiveProfile } from "@/components/providers/active-profile-provider";
 import {
   ACTIVITY_LABELS,
@@ -75,6 +76,7 @@ export function ProfileView({
       height_cm: Number(profile.height_cm),
       current_weight_kg: Number(profile.current_weight_kg),
       goal: profile.goal,
+      goal_pace: profile.goal_pace ?? "moderate",
       activity_level: profile.activity_level,
     });
     setWeightLogs(initialWeightByProfile[profile.id] ?? []);
@@ -220,27 +222,18 @@ export function ProfileView({
           </div>
         </section>
 
-        <section className="mb-6 space-y-2">
+        <section className="mb-6 space-y-3">
           <h3 className="pp-label-caps px-1 text-[11px] tracking-[0.12em] text-muted-foreground">
             Twoje cele
           </h3>
-          <div className="flex rounded-xl bg-muted p-1">
-            {Object.entries(GOAL_LABELS).map(([key, label]) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setForm({ ...form, goal: key as ProfileInput["goal"] })}
-                className={cn(
-                  "flex-1 rounded-lg py-3 text-sm transition-all",
-                  form.goal === key
-                    ? "bg-card text-foreground shadow-sm"
-                    : "text-muted-foreground"
-                )}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
+          <GoalTabs
+            goal={form.goal}
+            onChange={(goal) => setForm({ ...form, goal })}
+          />
+          <GoalPaceSelector
+            profile={form}
+            onChange={(goal_pace) => setForm({ ...form, goal_pace })}
+          />
         </section>
 
         <section
@@ -344,6 +337,9 @@ export function ProfileView({
             <p className="text-muted-foreground">
               {profile.daily_calories} kcal · B {profile.daily_protein_g} g · W{" "}
               {profile.daily_carbs_g} g · T {profile.daily_fat_g} g
+            </p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Zapisz profil po zmianie tempa, aby przeliczyć cele.
             </p>
           </div>
 
