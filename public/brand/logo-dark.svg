@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 48" fill="none">
+  <rect x="0" y="4" width="40" height="40" rx="12" fill="#47645B"/>
+  <circle cx="14" cy="24" r="9" fill="#D1F2E6"/>
+  <circle cx="26" cy="24" r="9" fill="#E8DEFB"/>
+  <text x="52" y="32" font-family="Geist, system-ui, sans-serif" font-size="22" font-weight="600" fill="#EFF1F2" letter-spacing="0.02em">PairPlate</text>
+</svg>
