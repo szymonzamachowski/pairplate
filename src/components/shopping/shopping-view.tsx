@@ -206,7 +206,9 @@ export function ShoppingView({
                 onValueChange={(v) => setCategory(v as ProductCategory)}
               >
                 <SelectTrigger className="rounded-xl">
-                  <SelectValue />
+                  <SelectValue placeholder="Wybierz kategorię">
+                    {CATEGORY_LABELS[category]}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
