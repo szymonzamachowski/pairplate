@@ -132,20 +132,7 @@ public/brand/         # Logo i ikony aplikacji
 - **RLS** na wszystkich tabelach użytkownika
 - **`households`** — wspólna przestrzeń pary, gotowa pod zaproszenia i SaaS
 
-## Design
-
-Paleta i komponenty zdefiniowane w `src/lib/design-system.ts`:
-
-- Primary: `#47645B`
-- Mint container: `#D1F2E6`
-- Violet secondary: `#625B73`
-- Tło: `#F8FAFB`
-
 ## Bezpieczeństwo
 
 - Nigdy nie commituj `.env.local` ani `SUPABASE_SERVICE_ROLE_KEY`
 - Klucz `service_role` używaj wyłącznie po stronie serwera (Server Actions), nigdy w kodzie klienta
-
-## Licencja
-
-Prywatne repozytorium — użytek własny / portfolio.
